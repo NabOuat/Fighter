@@ -16,6 +16,7 @@ The user is a beginner with Godot and works step by step: explain each change in
 - Generate or restructure `.tres` files with a headless Godot script using `ResourceSaver.save` rather than hand-writing typed arrays.
 - Energy (`Fighter.energy`, 0-400, 4 segments): specials and dodge cost 100, ultimate 400; specials, projectiles and assists never grant energy. `AttackData` special fields: energy_cost, chip_damage, dash_speed, projectile (`ProjectileData`), invulnerable_startup, is_ultimate. Special button: short press (<10 frames) fires on release, hold charges.
 - Assists: `FighterData.assist` (`AssistData`: ATTACK / PROTECT / HEAL, cooldown 900 frames). The arena sets `Fighter.support`, spawns `Assist` nodes (`scenes/fight/assist.gd`); assist and projectile hits use `receive_attack(..., remote = true)` so a parry never stuns a distant caller.
+- Match flow lives in `fight.gd` (`Phase`: INTRO, FIGHT, ROUND_OVER, MATCH_OVER): 2 winning rounds, 60 s timer (ticks only on simulated frames), KO slow motion, draws count for both. Controls are released outside FIGHT. Key M toggles training mode (`Fighter.immortal`, no timer).
 - 2D physics layers: 1 decor, 2 fighters (fighters don't collide with each other; the arena pushes them apart).
 - Input actions (simple control mode): `move_left`, `move_right`, `jump`, `crouch`, `attack` (J), `special` (K), `guard` (L), `assist` (I), `ultimate` (U), `pause`. Punch/kick will come back with the technical mode.
 - Historical accuracy matters: check facts (dates, kingdoms) before writing bios.

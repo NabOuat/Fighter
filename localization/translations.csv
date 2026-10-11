@@ -19,3 +19,9 @@ FIGHT_PARRY,Contre parfait !,Perfect parry!
 FIGHT_DODGE,Esquive mystique !,Mystic dodge!
 FIGHT_ULTIMATE,Ultime !,Ultimate!
 FIGHTER_TEST_C_NAME,Combattant C,Fighter C
+FIGHT_FINAL_ROUND,Round final,Final round
+FIGHT_DOUBLE_KO,Double K.O. !,Double K.O.!
+FIGHT_DRAW,Égalité,Draw
+FIGHT_ROUND_WINNER,%s gagne la manche,%s wins the round
+FIGHT_MATCH_WINNER,Victoire : %s !,%s wins!
+FIGHT_PRESS_RESTART,Appuie sur Attaque pour rejouer,Press Attack to play again

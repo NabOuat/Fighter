@@ -71,6 +71,8 @@ const PARRY_FLASH := Color(0.3, 1.0, 1.0)
 var opponent: Fighter
 ## Le personnage choisi comme soutien pour ce combat, donné par l'arène.
 var support: FighterData
+## Coché par l'arène en mode entraînement : la vie ne descend jamais sous 1.
+var immortal := false
 ## Frames restantes avant de pouvoir rappeler le soutien (0 = prêt).
 var assist_cooldown := 0
 ## Vrai tant que le soutien est à l'écran (géré par l'arène).
@@ -198,6 +200,18 @@ func _read_special_button() -> void:
 		if special_held_frames < CHARGE_THRESHOLD_FRAMES:
 			buffered_special = INPUT_BUFFER_FRAMES
 		special_held_frames = 0
+
+
+## Commandes bloquées (annonce de manche, fin de manche) : on lâche tout.
+func release_controls() -> void:
+	for key in intent:
+		intent[key] = false
+	special_held_frames = 0
+	buffered_attack = 0
+	buffered_guard = 0
+	buffered_special = 0
+	buffered_ultimate = 0
+	buffered_assist = 0
 
 
 ## Une frame de jeu.
@@ -567,7 +581,7 @@ func _block(attack: AttackData, attacker: Fighter) -> void:
 
 func _take_damage(attack: AttackData, attacker: Fighter) -> void:
 	var damage := roundi(attack.damage * attacker.data.damage_multiplier() * data.defense_multiplier())
-	health = maxi(0, health - damage)
+	health = maxi(1 if immortal else 0, health - damage)
 	special_held_frames = 0
 	# Seul un appui sur Garde PENDANT qu'on encaisse déclenche l'esquive : un contre
 	# parfait tenté un peu trop tôt ne doit pas se transformer en esquive.
