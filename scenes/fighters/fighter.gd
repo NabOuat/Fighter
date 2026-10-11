@@ -16,6 +16,8 @@ signal dodged
 signal projectile_launched(data: ProjectileData, shooter: Fighter)
 ## Émis au début de l'ultime (l'arène arrête le combat pour la mise en scène).
 signal ultimate_started(fighter: Fighter)
+## Émis quand le combattant appelle son soutien (l'arène le fait apparaître).
+signal assist_called(fighter: Fighter)
 
 enum State { IDLE, WALK, CROUCH, JUMP, ATTACK, GUARD, BLOCKSTUN, HITSTUN, KNOCKDOWN, GETUP, DODGE, CHARGE }
 ## Ce qui arrive quand un coup atteint le combattant.
@@ -67,6 +69,12 @@ const PARRY_FLASH := Color(0.3, 1.0, 1.0)
 
 ## L'adversaire, donné par l'arène.
 var opponent: Fighter
+## Le personnage choisi comme soutien pour ce combat, donné par l'arène.
+var support: FighterData
+## Frames restantes avant de pouvoir rappeler le soutien (0 = prêt).
+var assist_cooldown := 0
+## Vrai tant que le soutien est à l'écran (géré par l'arène).
+var assist_active := false
 var state: State = State.IDLE
 ## 1 = tourné vers la droite, -1 = vers la gauche.
 var facing := 1
@@ -88,6 +96,7 @@ var buffered_attack := 0
 var buffered_guard := 0
 var buffered_special := 0
 var buffered_ultimate := 0
+var buffered_assist := 0
 ## Vrai si le dernier appui sur Spécial était accompagné de la direction avant.
 var special_forward := false
 ## Depuis combien de frames Spécial est maintenu (0 = relâché).
@@ -96,15 +105,17 @@ var special_held_frames := 0
 var active_projectiles := 0
 var parry_window := 0
 var flash_frames := 0
+## Reste de soin à moins d'un point de vie (le soin arrive par petites fractions).
+var _heal_buffer := 0.0
 var flash_color := HIT_FLASH
 ## Ce que le combattant veut faire à cette frame.
 ## Rempli par le joueur (clavier, tactile) ou par l'IA / le mannequin.
-## « attack », « guard_pressed » et « ultimate » = appui à cette frame ;
+## « attack », « guard_pressed », « ultimate » et « assist » = appui à cette frame ;
 ## les autres (dont « special ») = touche maintenue.
 var intent := {
 	"left": false, "right": false, "jump": false, "crouch": false,
 	"attack": false, "guard": false, "guard_pressed": false,
-	"special": false, "ultimate": false,
+	"special": false, "ultimate": false, "assist": false,
 }
 
 @onready var pivot: Node2D = $Pivot
@@ -135,8 +146,11 @@ func reset() -> void:
 	buffered_guard = 0
 	buffered_special = 0
 	buffered_ultimate = 0
+	buffered_assist = 0
 	special_held_frames = 0
 	parry_window = 0
+	# Le soutien est disponible dès le début de chaque manche.
+	assist_cooldown = 0
 	modulate.a = 1.0
 	_change_state(State.IDLE)
 	_update_visuals()
@@ -155,7 +169,10 @@ func poll_input() -> void:
 		intent.guard_pressed = Input.is_action_just_pressed("guard")
 		intent.special = Input.is_action_pressed("special")
 		intent.ultimate = Input.is_action_just_pressed("ultimate")
+		intent.assist = Input.is_action_just_pressed("assist")
 	_read_special_button()
+	if intent.assist:
+		buffered_assist = INPUT_BUFFER_FRAMES
 	if intent.ultimate:
 		buffered_ultimate = INPUT_BUFFER_FRAMES
 	if intent.attack:
@@ -166,6 +183,7 @@ func poll_input() -> void:
 	intent.attack = false
 	intent.guard_pressed = false
 	intent.ultimate = false
+	intent.assist = false
 
 
 ## Le bouton Spécial sert à deux choses : un appui court lance un coup spécial
@@ -188,8 +206,16 @@ func tick(delta: float) -> void:
 	buffered_guard = maxi(0, buffered_guard - 1)
 	buffered_special = maxi(0, buffered_special - 1)
 	buffered_ultimate = maxi(0, buffered_ultimate - 1)
+	buffered_assist = maxi(0, buffered_assist - 1)
+	assist_cooldown = maxi(0, assist_cooldown - 1)
 	parry_window = maxi(0, parry_window - 1)
 	flash_frames = maxi(0, flash_frames - 1)
+	# Le soutien s'appelle sans interrompre ce qu'on fait (même en plein combo).
+	if buffered_assist > 0 and can_call_assist():
+		buffered_assist = 0
+		assist_cooldown = support.assist.cooldown_frames
+		assist_active = true
+		assist_called.emit(self)
 
 	match state:
 		State.IDLE, State.WALK, State.CROUCH, State.GUARD:
@@ -402,6 +428,25 @@ func _start_special(attack: AttackData) -> void:
 		ultimate_started.emit(self)
 
 
+## Vrai si le soutien peut être appelé maintenant.
+func can_call_assist() -> bool:
+	if support == null or support.assist == null:
+		return false
+	if assist_cooldown > 0 or assist_active:
+		return false
+	return state not in [State.HITSTUN, State.KNOCKDOWN, State.GETUP, State.DODGE, State.CHARGE]
+
+
+## Rend des points de vie (soutien de soin), sans dépasser le maximum.
+func heal(amount: float) -> void:
+	if health <= 0:
+		return
+	_heal_buffer += amount
+	var whole := int(_heal_buffer)
+	_heal_buffer -= whole
+	health = mini(MAX_HEALTH, health + whole)
+
+
 func add_energy(amount: float) -> void:
 	energy = clampf(energy + amount, 0.0, MAX_ENERGY)
 
@@ -480,15 +525,15 @@ func get_hurtbox_rect() -> Rect2:
 
 ## Appelée par l'arène quand un coup de l'adversaire atteint ce combattant.
 ## Renvoie ce qui s'est passé : touché, paré ou contré.
-## from_projectile : le coup vient d'un projectile (le lanceur est loin).
-func receive_attack(attack: AttackData, attacker: Fighter, from_projectile := false) -> HitResult:
+## remote : le coup ne vient pas du corps de l'attaquant (projectile ou soutien).
+func receive_attack(attack: AttackData, attacker: Fighter, remote := false) -> HitResult:
 	var can_parry := is_on_floor() and state in [State.IDLE, State.WALK, State.CROUCH, State.GUARD, State.BLOCKSTUN]
 	if parry_window > 0 and can_parry:
 		parry_window = 0
 		_flash(PARRY_FLASH)
 		_change_state(State.IDLE)
-		# Contrer un projectile le détruit seulement : le lanceur n'est pas touché.
-		if not from_projectile:
+		# Contrer un projectile ou un soutien l'arrête seulement : l'attaquant n'est pas touché.
+		if not remote:
 			attacker.get_parried()
 		return HitResult.PARRIED
 	if _can_block(attack, attacker):

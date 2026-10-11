@@ -44,7 +44,7 @@ personnage jouable), `stages/` (les arènes), `ui/` (barres de vie, boutons tact
 | Spécial 2 | avant + K |
 | Garde | L |
 | Ultime (barre pleine) | U |
-| Soutien (étape 4) | I |
+| Soutien | I |
 | Pause | Échap ou P |
 
 Les contrôles tactiles viendront avec l'écran de combat.
@@ -60,8 +60,9 @@ Les contrôles tactiles viendront avec l'écran de combat.
 ## Le combat (`scenes/fight/` et `scenes/fighters/`)
 
 - Ouvre `scenes/fight/fight.tscn` et appuie sur **F6** : ton combattant (doré) contre un mannequin (turquoise). Touche **R** pour tout remettre en place (énergie pleine en entraînement).
-- Touches **1 à 6** : ce que fait le mannequin. 1 immobile, 2 garde debout, 3 garde accroupie, 4 combo en boucle, 5 coup bas en boucle, 6 projectile en boucle. Touche **0** : vider l'énergie.
+- Touches **1 à 6** : ce que fait le mannequin. 1 immobile, 2 garde debout, 3 garde accroupie, 4 combo en boucle, 5 coup bas en boucle, 6 projectile en boucle. Touche **0** : vider l'énergie. Touche **7** : le mannequin appelle son soutien (bouclier). Touche **T** : changer ton soutien (A attaque, B bouclier, C soin).
 - Énergie : 4 segments. Un spécial ou une esquive coûte 1 segment, l'ultime la barre pleine. Elle se remplit en frappant, en encaissant, en parant et en chargeant (maintenir K, immobile et sans défense). Un coup du combo qui touche peut être annulé en spécial.
+- Soutien : 1 par combat, appelé avec **I** (même en plein combo), puis 15 secondes de recharge. Trois types : attaque (il fonce sur l'adversaire), protection (bouclier devant toi pendant 1,5 s, arrête coups et projectiles), soin (100 PV en 1 s). La jauge sous l'énergie clignote quand il est prêt.
 - Défense : maintenir **Garde** (L) ou reculer pour parer ; appuyer sur Garde **juste avant** l'impact = contre parfait ; appuyer sur Garde **pendant qu'on encaisse** = esquive mystique (coûte 1 segment d'énergie).
 - `fight.gd` (l'arène) fait avancer le combat image par image : commandes → mouvements → séparation des corps → vérification des coups.
 - **Rectangle vert** : zone où l'on peut être touché. **Rectangle rouge** : zone de frappe, visible quand le coup peut toucher.

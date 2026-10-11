@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="FighterData" format=3]
 
 [ext_resource type="Script" path="res://data/attack_data.gd" id="1_etgra"]
+[ext_resource type="Script" path="res://data/assist_data.gd" id="2_f2ca1"]
 [ext_resource type="Script" path="res://data/fighter_data.gd" id="2_mji17"]
 [ext_resource type="Script" path="res://data/projectile_data.gd" id="3_mji17"]
 
@@ -13,6 +14,12 @@ hit_level = 0
 hitstun = 18
 blockstun = 12
 hitbox = Rect2(0, -24, 26, 22)
+
+[sub_resource type="Resource" id="Resource_eyxff"]
+script = ExtResource("2_f2ca1")
+kind = 1
+appear_frames = 8
+active_frames = 90
 
 [sub_resource type="Resource" id="Resource_y42if"]
 script = ExtResource("1_etgra")
@@ -128,4 +135,5 @@ air_attack = SubResource("Resource_f2ca1")
 special_1 = SubResource("Resource_r63m7")
 special_2 = SubResource("Resource_q4ujp")
 ultimate = SubResource("Resource_42eeb")
+assist = SubResource("Resource_eyxff")
 placeholder_color = Color(0.25, 0.75, 0.72, 1)

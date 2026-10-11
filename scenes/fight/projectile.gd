@@ -6,14 +6,19 @@ var data: ProjectileData
 var shooter: Fighter
 var direction := 1
 var age := 0
+## Vrai si le projectile vient d'un soutien : il ne compte pas dans la limite
+## d'un seul projectile à la fois du combattant.
+var from_assist := false
 
 
-## Prépare le projectile au moment où le combattant le lance.
-func launch(projectile_data: ProjectileData, from: Fighter) -> void:
+## Prépare le projectile au moment où il est lancé.
+## shooter : le combattant à qui il appartient (même s'il vient de son soutien).
+func launch(projectile_data: ProjectileData, from: Fighter, origin: Vector2, dir: int, by_assist := false) -> void:
 	data = projectile_data
 	shooter = from
-	direction = from.facing
-	position = from.global_position + Vector2(data.spawn_offset.x * direction, data.spawn_offset.y)
+	direction = dir
+	position = origin
+	from_assist = by_assist
 	var view := ColorRect.new()
 	view.color = data.color
 	view.size = data.size

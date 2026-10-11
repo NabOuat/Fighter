@@ -6,6 +6,7 @@
 [ext_resource type="Resource" path="res://data/fighters/test_b.tres" id="4_test_b"]
 [ext_resource type="Script" path="res://scenes/ui/health_bar.gd" id="5_health_bar"]
 [ext_resource type="Script" path="res://scenes/ui/energy_bar.gd" id="6_energy_bar"]
+[ext_resource type="Script" path="res://scenes/ui/assist_gauge.gd" id="7_assist_gauge"]
 
 [sub_resource type="RectangleShape2D" id="Shape_floor"]
 size = Vector2(480, 40)
@@ -108,6 +109,27 @@ offset_right = 468.0
 offset_bottom = 45.0
 mouse_filter = 2
 script = ExtResource("6_energy_bar")
+flip = true
+
+[node name="PlayerAssist" type="Control" parent="HUD"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 12.0
+offset_top = 49.0
+offset_right = 72.0
+offset_bottom = 55.0
+mouse_filter = 2
+script = ExtResource("7_assist_gauge")
+
+[node name="DummyAssist" type="Control" parent="HUD"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 408.0
+offset_top = 49.0
+offset_right = 468.0
+offset_bottom = 55.0
+mouse_filter = 2
+script = ExtResource("7_assist_gauge")
 flip = true
 
 [node name="PlayerName" type="Label" parent="HUD"]

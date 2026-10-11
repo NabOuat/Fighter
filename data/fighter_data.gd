@@ -55,6 +55,10 @@ enum Reach { MELEE, LONG_WEAPON, RANGED }
 ## Ultime : bouton Ultime, barre d'énergie pleine.
 @export var ultimate: AttackData
 
+@export_group("Soutien")
+## Ce que fait ce personnage quand un autre l'appelle en soutien.
+@export var assist: AssistData
+
 @export_group("Visuel")
 ## Couleur du rectangle temporaire, en attendant les vrais sprites.
 @export var placeholder_color: Color = Color.WHITE

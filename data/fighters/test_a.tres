@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="FighterData" format=3]
 
 [ext_resource type="Script" path="res://data/attack_data.gd" id="1_5wd2k"]
+[ext_resource type="Script" path="res://data/assist_data.gd" id="2_kujnm"]
 [ext_resource type="Script" path="res://data/fighter_data.gd" id="2_yxg3j"]
 [ext_resource type="Script" path="res://data/projectile_data.gd" id="3_yxg3j"]
 
@@ -13,6 +14,21 @@ hit_level = 0
 hitstun = 18
 blockstun = 12
 hitbox = Rect2(0, -24, 26, 22)
+
+[sub_resource type="Resource" id="Resource_fgtv3"]
+script = ExtResource("1_5wd2k")
+active = 30
+damage = 60
+hitstun = 26
+blockstun = 14
+pushback = 60.0
+hitstop = 6
+dash_speed = 300.0
+hitbox = Rect2(-4, -46, 26, 40)
+
+[sub_resource type="Resource" id="Resource_peagv"]
+script = ExtResource("2_kujnm")
+attack = SubResource("Resource_fgtv3")
 
 [sub_resource type="Resource" id="Resource_qicc2"]
 script = ExtResource("1_5wd2k")
@@ -126,4 +142,5 @@ air_attack = SubResource("Resource_kujnm")
 special_1 = SubResource("Resource_oaweq")
 special_2 = SubResource("Resource_g6h8e")
 ultimate = SubResource("Resource_74fr4")
+assist = SubResource("Resource_peagv")
 placeholder_color = Color(0.85, 0.65, 0.2, 1)
