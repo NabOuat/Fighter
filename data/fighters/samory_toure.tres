@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="FighterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/fighter_data.gd" id="1_fighter"]
+
+[resource]
+script = ExtResource("1_fighter")
+id = &"samory_toure"
+name_key = "FIGHTER_SAMORY_NAME"
+origin_key = "FIGHTER_SAMORY_ORIGIN"
+bio_key = "FIGHTER_SAMORY_BIO"
+birth_year = 1830
+death_year = 1900
+max_health = 105
+walk_speed = 85.0
+power = 1.1
+placeholder_color = Color(0.85, 0.65, 0.2, 1)
