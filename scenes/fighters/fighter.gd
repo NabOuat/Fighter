@@ -84,6 +84,9 @@ var health := MAX_HEALTH
 var energy := 0.0
 var current_attack: AttackData
 var attack_frame := 0
+## Numéro de l'attaque, augmenté à chaque nouveau coup (sert à l'IA pour
+## reconnaître un coup qu'elle a déjà vu).
+var attack_serial := 0
 ## Position dans le combo (0 = premier coup).
 var combo_index := -1
 ## Vrai quand l'attaque en cours a déjà touché (un coup ne touche qu'une fois).
@@ -420,6 +423,7 @@ func _prepare_attack(attack: AttackData) -> void:
 	current_attack = attack
 	attack_frame = 0
 	attack_has_hit = false
+	attack_serial += 1
 
 
 ## Lance le spécial demandé (1 ou 2) s'il y a assez d'énergie. Renvoie vrai s'il part.

@@ -18,8 +18,8 @@ extends Node2D
 
 ## Les étapes d'un combat.
 enum Phase { INTRO, FIGHT, ROUND_OVER, MATCH_OVER }
-## Ce que fait le mannequin (touches 1 à 7 pendant le test).
-enum DummyMode { STAND, GUARD_HIGH, GUARD_LOW, ATTACK, ATTACK_LOW, PROJECTILE, ASSIST }
+## Ce que fait le mannequin (touches 1 à 8 pendant le test). AI = l'ordinateur joue vraiment.
+enum DummyMode { STAND, GUARD_HIGH, GUARD_LOW, ATTACK, ATTACK_LOW, PROJECTILE, ASSIST, AI }
 
 ## Soutiens de test, à faire défiler avec la touche T : attaque, protection, soin.
 const TEST_SUPPORTS: Array[FighterData] = [
@@ -79,7 +79,9 @@ var round_winners: Array[Fighter] = []
 
 var hitstop := 0
 var ultimate_freeze := 0
-var dummy_mode: DummyMode = DummyMode.STAND
+var dummy_mode: DummyMode = DummyMode.AI
+## L'adversaire contrôlé par l'ordinateur (touche Y : changer la difficulté).
+var ai := FighterAI.new(FighterAI.Difficulty.NORMAL)
 var frame_count := 0
 var popup_frames := 0
 var projectiles: Array[Projectile] = []
@@ -192,9 +194,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		KEY_0:
 			for fighter in fighters:
 				fighter.energy = 0.0
-		KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7:
+		KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8:
 			dummy_mode = (event.physical_keycode - KEY_1) as DummyMode
 			frame_count = 0
+		KEY_Y:
+			ai.difficulty = ((ai.difficulty + 1) % FighterAI.Difficulty.size()) as FighterAI.Difficulty
 		KEY_T:
 			support_index = (support_index + 1) % TEST_SUPPORTS.size()
 			player.support = TEST_SUPPORTS[support_index]
@@ -323,6 +327,9 @@ func _winner_text(winners: Array[Fighter], key: String) -> String:
 
 ## Donne ses commandes au mannequin selon le mode choisi.
 func _drive_dummy() -> void:
+	if dummy_mode == DummyMode.AI:
+		ai.update(dummy, player, projectiles)
+		return
 	var intent := dummy.intent
 	var beat := frame_count % DUMMY_PERIOD
 	intent.guard = dummy_mode in [DummyMode.GUARD_HIGH, DummyMode.GUARD_LOW]
@@ -547,8 +554,8 @@ func _update_hud() -> void:
 	dim.visible = ultimate_freeze > 0
 	# Texte de débogage pour le développeur, absent du jeu final
 	# (c'est pour ça qu'il n'est pas dans le fichier de traductions).
-	debug_label.text = "%s | P1 %s E%d [T: %s] | Dummy [%s] | M mode 1-7 dummy R reset" % [
+	debug_label.text = "%s | P1 %s E%d [T: %s] | Dummy [%s %s] | M mode 1-8 dummy Y IA R reset" % [
 		"TRAINING" if training else Phase.keys()[phase],
 		Fighter.State.keys()[player.state], int(player.energy), player.support.id,
-		DummyMode.keys()[dummy_mode],
+		DummyMode.keys()[dummy_mode], FighterAI.Difficulty.keys()[ai.difficulty],
 	]
