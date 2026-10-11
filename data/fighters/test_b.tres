@@ -1,0 +1,62 @@
+[gd_resource type="Resource" script_class="FighterData" format=3]
+
+[ext_resource type="Script" path="res://data/attack_data.gd" id="1_etgra"]
+[ext_resource type="Script" path="res://data/fighter_data.gd" id="2_mji17"]
+
+[sub_resource type="Resource" id="Resource_f2ca1"]
+script = ExtResource("1_etgra")
+active = 14
+recovery = 0
+damage = 60
+hit_level = 0
+hitstun = 18
+blockstun = 12
+hitbox = Rect2(0, -24, 26, 22)
+
+[sub_resource type="Resource" id="Resource_y42if"]
+script = ExtResource("1_etgra")
+recovery = 10
+
+[sub_resource type="Resource" id="Resource_hj6ji"]
+script = ExtResource("1_etgra")
+startup = 5
+recovery = 12
+damage = 45
+hitstun = 18
+blockstun = 12
+pushback = 100.0
+hitbox = Rect2(6, -40, 24, 10)
+
+[sub_resource type="Resource" id="Resource_aevbs"]
+script = ExtResource("1_etgra")
+startup = 8
+active = 4
+recovery = 20
+damage = 70
+hitstun = 20
+blockstun = 14
+pushback = 160.0
+knockdown = true
+hitstop = 8
+hitbox = Rect2(6, -36, 30, 14)
+
+[sub_resource type="Resource" id="Resource_a1tdn"]
+script = ExtResource("1_etgra")
+startup = 6
+recovery = 14
+damage = 50
+hit_level = 2
+pushback = 80.0
+hitbox = Rect2(4, -12, 28, 10)
+
+[resource]
+script = ExtResource("2_mji17")
+id = &"test_b"
+name_key = "FIGHTER_TEST_B_NAME"
+power = 2
+defense = 4
+speed = 4
+combo = Array[ExtResource("1_etgra")]([SubResource("Resource_y42if"), SubResource("Resource_hj6ji"), SubResource("Resource_aevbs")])
+low_attack = SubResource("Resource_a1tdn")
+air_attack = SubResource("Resource_f2ca1")
+placeholder_color = Color(0.25, 0.75, 0.72, 1)

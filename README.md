@@ -39,7 +39,8 @@ personnage jouable), `stages/` (les arènes), `ui/` (barres de vie, boutons tact
 | Gauche / droite | Q / D ou flèches |
 | Sauter | Z ou flèche haut |
 | S'accroupir | S ou flèche bas |
-| Poing / pied / spécial | J / K / L |
+| Attaque (taper plusieurs fois = combo) | J |
+| Spécial / Garde / Soutien / Ultime | K / L / I / U (à partir des étapes 2 à 4) |
 | Pause | Échap ou P |
 
 Les contrôles tactiles viendront avec l'écran de combat.
@@ -50,7 +51,15 @@ Les contrôles tactiles viendront avec l'écran de combat.
 - **Aucun texte écrit en dur** dans les scènes ou le code : on ajoute une clé dans
   `localization/translations.csv` (ex : `MENU_PLAY`) et on utilise la clé.
 - **Un script à côté de sa scène** : `scenes/main/main.tscn` + `scenes/main/main.gd`.
-- **Les infos d'un combattant** (vie, vitesse, textes) vont dans sa fiche `.tres`, pas dans le code.
+- **Les infos d'un combattant** (stats, attaques, textes) vont dans sa fiche `.tres`, pas dans le code.
+
+## Le combat (`scenes/fight/` et `scenes/fighters/`)
+
+- Ouvre `scenes/fight/fight.tscn` et appuie sur **F6** : ton combattant (doré) contre un mannequin (turquoise). Touche **R** pour tout remettre en place.
+- `fight.gd` (l'arène) fait avancer le combat image par image : commandes → mouvements → séparation des corps → vérification des coups.
+- **Rectangle vert** : zone où l'on peut être touché. **Rectangle rouge** : zone de frappe, visible quand le coup peut toucher.
+- La vie est la même pour tous : **1 000 points**. Les stats (puissance, défense, vitesse de 1 à 5) et les attaques se règlent dans la fiche du combattant (`data/fighters/*.tres`).
+- Chaque attaque se règle en *frames* (60 par seconde) : préparation (`startup`), coup actif (`active`), retour en garde (`recovery`), dégâts, durée d'étourdissement (`hitstun`), recul, projection au sol, arrêt sur image (`hitstop`).
 
 ## Ajouter un combattant
 

@@ -1,0 +1,59 @@
+[gd_resource type="Resource" script_class="FighterData" format=3]
+
+[ext_resource type="Script" path="res://data/attack_data.gd" id="1_5wd2k"]
+[ext_resource type="Script" path="res://data/fighter_data.gd" id="2_yxg3j"]
+
+[sub_resource type="Resource" id="Resource_kujnm"]
+script = ExtResource("1_5wd2k")
+active = 14
+recovery = 0
+damage = 60
+hit_level = 0
+hitstun = 18
+blockstun = 12
+hitbox = Rect2(0, -24, 26, 22)
+
+[sub_resource type="Resource" id="Resource_qicc2"]
+script = ExtResource("1_5wd2k")
+recovery = 10
+
+[sub_resource type="Resource" id="Resource_gc7rf"]
+script = ExtResource("1_5wd2k")
+startup = 5
+recovery = 12
+damage = 45
+hitstun = 18
+blockstun = 12
+pushback = 100.0
+hitbox = Rect2(6, -40, 24, 10)
+
+[sub_resource type="Resource" id="Resource_jnp6v"]
+script = ExtResource("1_5wd2k")
+startup = 8
+active = 4
+recovery = 20
+damage = 70
+hitstun = 20
+blockstun = 14
+pushback = 160.0
+knockdown = true
+hitstop = 8
+hitbox = Rect2(6, -36, 30, 14)
+
+[sub_resource type="Resource" id="Resource_nudj1"]
+script = ExtResource("1_5wd2k")
+startup = 6
+recovery = 14
+damage = 50
+hit_level = 2
+pushback = 80.0
+hitbox = Rect2(4, -12, 28, 10)
+
+[resource]
+script = ExtResource("2_yxg3j")
+id = &"test_a"
+name_key = "FIGHTER_TEST_A_NAME"
+combo = Array[ExtResource("1_5wd2k")]([SubResource("Resource_qicc2"), SubResource("Resource_gc7rf"), SubResource("Resource_jnp6v")])
+low_attack = SubResource("Resource_nudj1")
+air_attack = SubResource("Resource_kujnm")
+placeholder_color = Color(0.85, 0.65, 0.2, 1)

@@ -12,3 +12,6 @@ FIGHT_TIME_UP,Temps écoulé !,Time up!
 FIGHTER_SAMORY_NAME,Samory Touré,Samory Touré
 FIGHTER_SAMORY_ORIGIN,Empire du Wassoulou,Wassoulou Empire
 FIGHTER_SAMORY_BIO,"Fondateur de l'empire du Wassoulou, il a résisté à la conquête coloniale française de 1882 à 1898.","Founder of the Wassoulou Empire, he resisted French colonial conquest from 1882 to 1898."
+FIGHT_COMBO_HITS,%d coups,%d hits
+FIGHTER_TEST_A_NAME,Combattant A,Fighter A
+FIGHTER_TEST_B_NAME,Combattant B,Fighter B

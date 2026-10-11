@@ -1,6 +1,53 @@
-[gd_resource type="Resource" script_class="FighterData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="FighterData" format=3]
 
 [ext_resource type="Script" path="res://data/fighter_data.gd" id="1_fighter"]
+[ext_resource type="Script" path="res://data/attack_data.gd" id="2_attack"]
+
+[sub_resource type="Resource" id="Resource_e4n38"]
+script = ExtResource("2_attack")
+active = 14
+recovery = 0
+damage = 60
+hit_level = 0
+hitstun = 18
+blockstun = 12
+hitbox = Rect2(0, -24, 26, 22)
+
+[sub_resource type="Resource" id="Resource_0ecya"]
+script = ExtResource("2_attack")
+recovery = 10
+
+[sub_resource type="Resource" id="Resource_21jiq"]
+script = ExtResource("2_attack")
+startup = 5
+recovery = 12
+damage = 45
+hitstun = 18
+blockstun = 12
+pushback = 100.0
+hitbox = Rect2(6, -40, 24, 10)
+
+[sub_resource type="Resource" id="Resource_vuwnf"]
+script = ExtResource("2_attack")
+startup = 8
+active = 4
+recovery = 20
+damage = 70
+hitstun = 20
+blockstun = 14
+pushback = 160.0
+knockdown = true
+hitstop = 8
+hitbox = Rect2(6, -36, 30, 14)
+
+[sub_resource type="Resource" id="Resource_ah5og"]
+script = ExtResource("2_attack")
+startup = 6
+recovery = 14
+damage = 50
+hit_level = 2
+pushback = 80.0
+hitbox = Rect2(4, -12, 28, 10)
 
 [resource]
 script = ExtResource("1_fighter")
@@ -10,7 +57,7 @@ origin_key = "FIGHTER_SAMORY_ORIGIN"
 bio_key = "FIGHTER_SAMORY_BIO"
 birth_year = 1830
 death_year = 1900
-max_health = 105
-walk_speed = 85.0
-power = 1.1
+combo = Array[ExtResource("2_attack")]([SubResource("Resource_0ecya"), SubResource("Resource_21jiq"), SubResource("Resource_vuwnf")])
+low_attack = SubResource("Resource_ah5og")
+air_attack = SubResource("Resource_e4n38")
 placeholder_color = Color(0.85, 0.65, 0.2, 1)
