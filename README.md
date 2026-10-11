@@ -55,7 +55,9 @@ Les contrôles tactiles viendront avec l'écran de combat.
 
 ## Le combat (`scenes/fight/` et `scenes/fighters/`)
 
-- Ouvre `scenes/fight/fight.tscn` et appuie sur **F6** : ton combattant (doré) contre un mannequin (turquoise). Touche **R** pour tout remettre en place.
+- Ouvre `scenes/fight/fight.tscn` et appuie sur **F6** : ton combattant (doré) contre un mannequin (turquoise). Touche **R** pour tout remettre en place (énergie pleine en entraînement).
+- Touches **1 à 5** : ce que fait le mannequin. 1 immobile, 2 garde debout, 3 garde accroupie, 4 combo en boucle, 5 coup bas en boucle.
+- Défense : maintenir **Garde** (L) ou reculer pour parer ; appuyer sur Garde **juste avant** l'impact = contre parfait ; appuyer sur Garde **pendant qu'on encaisse** = esquive mystique (coûte 1 segment d'énergie).
 - `fight.gd` (l'arène) fait avancer le combat image par image : commandes → mouvements → séparation des corps → vérification des coups.
 - **Rectangle vert** : zone où l'on peut être touché. **Rectangle rouge** : zone de frappe, visible quand le coup peut toucher.
 - La vie est la même pour tous : **1 000 points**. Les stats (puissance, défense, vitesse de 1 à 5) et les attaques se règlent dans la fiche du combattant (`data/fighters/*.tres`).

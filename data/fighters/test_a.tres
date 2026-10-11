@@ -5,7 +5,7 @@
 
 [sub_resource type="Resource" id="Resource_kujnm"]
 script = ExtResource("1_5wd2k")
-active = 14
+active = 40
 recovery = 0
 damage = 60
 hit_level = 0
