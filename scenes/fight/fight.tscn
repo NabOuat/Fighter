@@ -5,6 +5,7 @@
 [ext_resource type="Resource" path="res://data/fighters/test_a.tres" id="3_test_a"]
 [ext_resource type="Resource" path="res://data/fighters/test_b.tres" id="4_test_b"]
 [ext_resource type="Script" path="res://scenes/ui/health_bar.gd" id="5_health_bar"]
+[ext_resource type="Script" path="res://scenes/ui/energy_bar.gd" id="6_energy_bar"]
 
 [sub_resource type="RectangleShape2D" id="Shape_floor"]
 size = Vector2(480, 40)
@@ -49,6 +50,13 @@ position = Vector2(480, 0)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight"]
 shape = SubResource("Shape_wall_right")
 
+[node name="Dim" type="ColorRect" parent="."]
+visible = false
+offset_right = 480.0
+offset_bottom = 270.0
+mouse_filter = 2
+color = Color(0.02, 0.01, 0.05, 0.75)
+
 [node name="Player" parent="." instance=ExtResource("2_fighter")]
 position = Vector2(170, 230)
 data = ExtResource("3_test_a")
@@ -79,6 +87,27 @@ offset_right = 468.0
 offset_bottom = 22.0
 mouse_filter = 2
 script = ExtResource("5_health_bar")
+flip = true
+
+[node name="PlayerEnergy" type="Control" parent="HUD"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 12.0
+offset_top = 40.0
+offset_right = 112.0
+offset_bottom = 45.0
+mouse_filter = 2
+script = ExtResource("6_energy_bar")
+
+[node name="DummyEnergy" type="Control" parent="HUD"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 368.0
+offset_top = 40.0
+offset_right = 468.0
+offset_bottom = 45.0
+mouse_filter = 2
+script = ExtResource("6_energy_bar")
 flip = true
 
 [node name="PlayerName" type="Label" parent="HUD"]

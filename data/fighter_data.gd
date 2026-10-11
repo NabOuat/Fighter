@@ -47,6 +47,14 @@ enum Reach { MELEE, LONG_WEAPON, RANGED }
 ## Attaque en l'air.
 @export var air_attack: AttackData
 
+@export_group("Coups spéciaux")
+## Spécial 1 : bouton Spécial seul (1 segment d'énergie).
+@export var special_1: AttackData
+## Spécial 2 : direction avant + Spécial (1 segment d'énergie).
+@export var special_2: AttackData
+## Ultime : bouton Ultime, barre d'énergie pleine.
+@export var ultimate: AttackData
+
 @export_group("Visuel")
 ## Couleur du rectangle temporaire, en attendant les vrais sprites.
 @export var placeholder_color: Color = Color.WHITE

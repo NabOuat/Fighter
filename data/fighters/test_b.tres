@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://data/attack_data.gd" id="1_etgra"]
 [ext_resource type="Script" path="res://data/fighter_data.gd" id="2_mji17"]
+[ext_resource type="Script" path="res://data/projectile_data.gd" id="3_mji17"]
 
 [sub_resource type="Resource" id="Resource_f2ca1"]
 script = ExtResource("1_etgra")
@@ -49,6 +50,71 @@ hit_level = 2
 pushback = 80.0
 hitbox = Rect2(4, -12, 28, 10)
 
+[sub_resource type="Resource" id="Resource_dstwo"]
+script = ExtResource("1_etgra")
+startup = 1
+active = 1
+recovery = 0
+damage = 80
+hitstun = 20
+blockstun = 16
+pushback = 140.0
+hitstop = 7
+chip_damage = 15
+hitbox = Rect2(0, 0, 0, 0)
+
+[sub_resource type="Resource" id="Resource_6qus7"]
+script = ExtResource("3_mji17")
+hit = SubResource("Resource_dstwo")
+
+[sub_resource type="Resource" id="Resource_r63m7"]
+script = ExtResource("1_etgra")
+startup = 12
+active = 1
+recovery = 22
+damage = 0
+hitstun = 18
+blockstun = 14
+pushback = 120.0
+hitstop = 6
+energy_cost = 100
+projectile = SubResource("Resource_6qus7")
+hitbox = Rect2(0, 0, 0, 0)
+
+[sub_resource type="Resource" id="Resource_q4ujp"]
+script = ExtResource("1_etgra")
+startup = 6
+active = 14
+recovery = 16
+damage = 90
+hitstun = 22
+blockstun = 18
+pushback = 180.0
+knockdown = true
+hitstop = 8
+energy_cost = 100
+chip_damage = 15
+dash_speed = 260.0
+hitbox = Rect2(-4, -46, 30, 40)
+
+[sub_resource type="Resource" id="Resource_42eeb"]
+script = ExtResource("1_etgra")
+startup = 10
+active = 8
+recovery = 30
+damage = 300
+hitstun = 30
+blockstun = 26
+pushback = 220.0
+knockdown = true
+hitstop = 15
+energy_cost = 400
+chip_damage = 40
+dash_speed = 300.0
+invulnerable_startup = true
+is_ultimate = true
+hitbox = Rect2(-6, -54, 42, 54)
+
 [resource]
 script = ExtResource("2_mji17")
 id = &"test_b"
@@ -59,4 +125,7 @@ speed = 4
 combo = Array[ExtResource("1_etgra")]([SubResource("Resource_y42if"), SubResource("Resource_hj6ji"), SubResource("Resource_aevbs")])
 low_attack = SubResource("Resource_a1tdn")
 air_attack = SubResource("Resource_f2ca1")
+special_1 = SubResource("Resource_r63m7")
+special_2 = SubResource("Resource_q4ujp")
+ultimate = SubResource("Resource_42eeb")
 placeholder_color = Color(0.25, 0.75, 0.72, 1)

@@ -12,8 +12,12 @@ extends CharacterBody2D
 
 ## Émis quand le combattant réussit une esquive mystique.
 signal dodged
+## Émis quand un coup spécial lance son projectile (l'arène le crée).
+signal projectile_launched(data: ProjectileData, shooter: Fighter)
+## Émis au début de l'ultime (l'arène arrête le combat pour la mise en scène).
+signal ultimate_started(fighter: Fighter)
 
-enum State { IDLE, WALK, CROUCH, JUMP, ATTACK, GUARD, BLOCKSTUN, HITSTUN, KNOCKDOWN, GETUP, DODGE }
+enum State { IDLE, WALK, CROUCH, JUMP, ATTACK, GUARD, BLOCKSTUN, HITSTUN, KNOCKDOWN, GETUP, DODGE, CHARGE }
 ## Ce qui arrive quand un coup atteint le combattant.
 enum HitResult { HIT, BLOCKED, PARRIED }
 
@@ -22,6 +26,10 @@ const MAX_HEALTH := 1000
 ## L'énergie ancestrale : 4 segments de 100.
 const MAX_ENERGY := 400
 const ENERGY_SEGMENT := 100
+## Énergie gagnée par frame en chargeant (90 par seconde : barre pleine en 4,4 s).
+const CHARGE_RATE := 1.5
+## Maintenir Spécial plus de 10 frames = charger. Un appui plus court = coup spécial.
+const CHARGE_THRESHOLD_FRAMES := 10
 const GRAVITY := 900.0
 const BODY_WIDTH := 24.0
 const STAND_HEIGHT := 56.0
@@ -63,7 +71,7 @@ var state: State = State.IDLE
 ## 1 = tourné vers la droite, -1 = vers la gauche.
 var facing := 1
 var health := MAX_HEALTH
-var energy := 0
+var energy := 0.0
 var current_attack: AttackData
 var attack_frame := 0
 ## Position dans le combo (0 = premier coup).
@@ -78,21 +86,32 @@ var air_attack_used := false
 var guard_low := false
 var buffered_attack := 0
 var buffered_guard := 0
+var buffered_special := 0
+var buffered_ultimate := 0
+## Vrai si le dernier appui sur Spécial était accompagné de la direction avant.
+var special_forward := false
+## Depuis combien de frames Spécial est maintenu (0 = relâché).
+var special_held_frames := 0
+## Nombre de projectiles de ce combattant encore à l'écran (un seul à la fois).
+var active_projectiles := 0
 var parry_window := 0
 var flash_frames := 0
 var flash_color := HIT_FLASH
 ## Ce que le combattant veut faire à cette frame.
 ## Rempli par le joueur (clavier, tactile) ou par l'IA / le mannequin.
-## « attack » et « guard_pressed » = appui à cette frame ; les autres = touche maintenue.
+## « attack », « guard_pressed » et « ultimate » = appui à cette frame ;
+## les autres (dont « special ») = touche maintenue.
 var intent := {
 	"left": false, "right": false, "jump": false, "crouch": false,
 	"attack": false, "guard": false, "guard_pressed": false,
+	"special": false, "ultimate": false,
 }
 
 @onready var pivot: Node2D = $Pivot
 @onready var body: ColorRect = $Pivot/Body
 @onready var front: ColorRect = $Pivot/Front
 @onready var arm: ColorRect = $Arm
+@onready var aura: ColorRect = $Aura
 @onready var hurtbox_view: ColorRect = $HurtboxView
 @onready var hitbox_view: ColorRect = $HitboxView
 
@@ -114,6 +133,9 @@ func reset() -> void:
 	combo_hits = 0
 	buffered_attack = 0
 	buffered_guard = 0
+	buffered_special = 0
+	buffered_ultimate = 0
+	special_held_frames = 0
 	parry_window = 0
 	modulate.a = 1.0
 	_change_state(State.IDLE)
@@ -131,6 +153,11 @@ func poll_input() -> void:
 		intent.guard = Input.is_action_pressed("guard")
 		intent.attack = Input.is_action_just_pressed("attack")
 		intent.guard_pressed = Input.is_action_just_pressed("guard")
+		intent.special = Input.is_action_pressed("special")
+		intent.ultimate = Input.is_action_just_pressed("ultimate")
+	_read_special_button()
+	if intent.ultimate:
+		buffered_ultimate = INPUT_BUFFER_FRAMES
 	if intent.attack:
 		buffered_attack = INPUT_BUFFER_FRAMES
 	if intent.guard_pressed:
@@ -138,12 +165,29 @@ func poll_input() -> void:
 		parry_window = PARRY_WINDOW_FRAMES
 	intent.attack = false
 	intent.guard_pressed = false
+	intent.ultimate = false
+
+
+## Le bouton Spécial sert à deux choses : un appui court lance un coup spécial
+## (au relâchement), un appui long charge l'énergie.
+func _read_special_button() -> void:
+	if intent.special:
+		special_held_frames += 1
+		# La direction est lue au moment de l'appui : on la lâche souvent avant le bouton.
+		if special_held_frames == 1:
+			special_forward = _input_direction() == facing
+	elif special_held_frames > 0:
+		if special_held_frames < CHARGE_THRESHOLD_FRAMES:
+			buffered_special = INPUT_BUFFER_FRAMES
+		special_held_frames = 0
 
 
 ## Une frame de jeu.
 func tick(delta: float) -> void:
 	buffered_attack = maxi(0, buffered_attack - 1)
 	buffered_guard = maxi(0, buffered_guard - 1)
+	buffered_special = maxi(0, buffered_special - 1)
+	buffered_ultimate = maxi(0, buffered_ultimate - 1)
 	parry_window = maxi(0, parry_window - 1)
 	flash_frames = maxi(0, flash_frames - 1)
 
@@ -164,6 +208,8 @@ func tick(delta: float) -> void:
 			_getup_state()
 		State.DODGE:
 			_dodge_state()
+		State.CHARGE:
+			_charge_state()
 
 	velocity.y += GRAVITY * delta
 	var was_in_air := not is_on_floor()
@@ -180,6 +226,16 @@ func _ground_state() -> void:
 	var direction := _input_direction()
 	_face_opponent()
 
+	if buffered_ultimate > 0 and energy >= MAX_ENERGY and data.ultimate:
+		buffered_ultimate = 0
+		_start_special(data.ultimate)
+		return
+	if buffered_special > 0 and _try_special():
+		return
+	if special_held_frames >= CHARGE_THRESHOLD_FRAMES:
+		velocity.x = 0
+		_change_state(State.CHARGE)
+		return
 	if _consume_attack():
 		if intent.crouch:
 			_start_attack(data.low_attack)
@@ -219,9 +275,20 @@ func _jump_state() -> void:
 
 
 func _attack_state() -> void:
-	velocity.x = 0
 	attack_frame += 1
-	var in_recovery := attack_frame > current_attack.startup + current_attack.active
+	var attack := current_attack
+	# Les attaques foncées avancent pendant leur temps actif.
+	if attack.dash_speed > 0.0 and attack.is_active_frame(attack_frame):
+		velocity.x = facing * attack.dash_speed
+	else:
+		velocity.x = 0
+	if attack.projectile and attack_frame == attack.startup:
+		projectile_launched.emit(attack.projectile, self)
+	var in_recovery := attack_frame > attack.startup + attack.active
+	# Annulation : un coup du combo qui a touché (ou été paré) peut être
+	# interrompu par un coup spécial. C'est la base des gros combos.
+	if in_recovery and attack.energy_cost == 0 and attack_has_hit and buffered_special > 0 and _try_special():
+		return
 	# Enchaînement : un nouvel appui pendant le coup lance le coup suivant
 	# du combo dès que le coup actuel a fini de pouvoir toucher.
 	if in_recovery and _can_chain() and _consume_attack():
@@ -267,6 +334,14 @@ func _getup_state() -> void:
 		_change_state(State.IDLE)
 
 
+## Charger : immobile et sans défense, l'énergie monte tant que Spécial est maintenu.
+func _charge_state() -> void:
+	velocity.x = 0
+	add_energy(CHARGE_RATE)
+	if special_held_frames == 0 or energy >= MAX_ENERGY:
+		_change_state(State.IDLE)
+
+
 func _dodge_state() -> void:
 	velocity.x = 0
 	stun_frames -= 1
@@ -305,6 +380,30 @@ func _prepare_attack(attack: AttackData) -> void:
 	current_attack = attack
 	attack_frame = 0
 	attack_has_hit = false
+
+
+## Lance le spécial demandé (1 ou 2) s'il y a assez d'énergie. Renvoie vrai s'il part.
+func _try_special() -> bool:
+	buffered_special = 0
+	var special := data.special_2 if special_forward else data.special_1
+	if special == null or energy < special.energy_cost:
+		return false
+	if special.projectile and active_projectiles > 0:
+		return false
+	_start_special(special)
+	return true
+
+
+func _start_special(attack: AttackData) -> void:
+	energy -= attack.energy_cost
+	combo_index = -1
+	_start_attack(attack)
+	if attack.is_ultimate:
+		ultimate_started.emit(self)
+
+
+func add_energy(amount: float) -> void:
+	energy = clampf(energy + amount, 0.0, MAX_ENERGY)
 
 
 func _can_chain() -> bool:
@@ -373,19 +472,24 @@ func get_hitbox_rect() -> Rect2:
 func get_hurtbox_rect() -> Rect2:
 	if state in [State.KNOCKDOWN, State.GETUP, State.DODGE]:
 		return Rect2()
+	if current_attack and current_attack.invulnerable_startup and attack_frame <= current_attack.startup:
+		return Rect2()
 	var height := _current_height()
 	return Rect2(global_position + Vector2(-BODY_WIDTH / 2.0, -height), Vector2(BODY_WIDTH, height))
 
 
 ## Appelée par l'arène quand un coup de l'adversaire atteint ce combattant.
 ## Renvoie ce qui s'est passé : touché, paré ou contré.
-func receive_attack(attack: AttackData, attacker: Fighter) -> HitResult:
+## from_projectile : le coup vient d'un projectile (le lanceur est loin).
+func receive_attack(attack: AttackData, attacker: Fighter, from_projectile := false) -> HitResult:
 	var can_parry := is_on_floor() and state in [State.IDLE, State.WALK, State.CROUCH, State.GUARD, State.BLOCKSTUN]
 	if parry_window > 0 and can_parry:
 		parry_window = 0
 		_flash(PARRY_FLASH)
 		_change_state(State.IDLE)
-		attacker.get_parried()
+		# Contrer un projectile le détruit seulement : le lanceur n'est pas touché.
+		if not from_projectile:
+			attacker.get_parried()
 		return HitResult.PARRIED
 	if _can_block(attack, attacker):
 		_block(attack, attacker)
@@ -396,6 +500,7 @@ func receive_attack(attack: AttackData, attacker: Fighter) -> HitResult:
 
 ## Appelée quand l'adversaire a contré notre coup : on reste sans défense un moment.
 func get_parried() -> void:
+	buffered_guard = 0
 	current_attack = null
 	combo_index = -1
 	velocity.x = 0
@@ -406,6 +511,9 @@ func get_parried() -> void:
 
 func _block(attack: AttackData, attacker: Fighter) -> void:
 	guard_low = intent.crouch
+	# Les coups spéciaux retirent un peu de vie même quand on pare.
+	if attack.chip_damage > 0:
+		health = maxi(1, health - attack.chip_damage)
 	velocity.x = _direction_from(attacker) * attack.pushback
 	stun_frames = attack.blockstun
 	_flash(BLOCK_FLASH)
@@ -415,6 +523,10 @@ func _block(attack: AttackData, attacker: Fighter) -> void:
 func _take_damage(attack: AttackData, attacker: Fighter) -> void:
 	var damage := roundi(attack.damage * attacker.data.damage_multiplier() * data.defense_multiplier())
 	health = maxi(0, health - damage)
+	special_held_frames = 0
+	# Seul un appui sur Garde PENDANT qu'on encaisse déclenche l'esquive : un contre
+	# parfait tenté un peu trop tôt ne doit pas se transformer en esquive.
+	buffered_guard = 0
 	current_attack = null
 	combo_index = -1
 	_flash(HIT_FLASH)
@@ -516,3 +628,13 @@ func _update_visuals() -> void:
 		arm.position = Vector2(facing * (BODY_WIDTH / 2.0) - (5 if facing == 1 else 0) + facing * 2, -height + 2)
 	else:
 		arm.visible = false
+
+	# L'aura : bleue quand on charge, dorée pendant la préparation de l'ultime.
+	var ultimate_startup := current_attack != null and current_attack.is_ultimate and attack_frame <= current_attack.startup
+	aura.visible = state == State.CHARGE or ultimate_startup
+	if aura.visible:
+		var pulse := 0.25 + 0.15 * sin(Time.get_ticks_msec() / 60.0)
+		var aura_color := Color(1.0, 0.85, 0.35) if ultimate_startup else Color(0.3, 0.85, 1.0)
+		aura.color = Color(aura_color, pulse)
+		aura.size = body.size + Vector2(12, 10)
+		aura.position = body.position - Vector2(6, 10)

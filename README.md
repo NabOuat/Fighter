@@ -40,7 +40,11 @@ personnage jouable), `stages/` (les arènes), `ui/` (barres de vie, boutons tact
 | Sauter | Z ou flèche haut |
 | S'accroupir | S ou flèche bas |
 | Attaque (taper plusieurs fois = combo) | J |
-| Spécial / Garde / Soutien / Ultime | K / L / I / U (à partir des étapes 2 à 4) |
+| Spécial (appui court) / charger l'énergie (maintenir) | K |
+| Spécial 2 | avant + K |
+| Garde | L |
+| Ultime (barre pleine) | U |
+| Soutien (étape 4) | I |
 | Pause | Échap ou P |
 
 Les contrôles tactiles viendront avec l'écran de combat.
@@ -56,7 +60,8 @@ Les contrôles tactiles viendront avec l'écran de combat.
 ## Le combat (`scenes/fight/` et `scenes/fighters/`)
 
 - Ouvre `scenes/fight/fight.tscn` et appuie sur **F6** : ton combattant (doré) contre un mannequin (turquoise). Touche **R** pour tout remettre en place (énergie pleine en entraînement).
-- Touches **1 à 5** : ce que fait le mannequin. 1 immobile, 2 garde debout, 3 garde accroupie, 4 combo en boucle, 5 coup bas en boucle.
+- Touches **1 à 6** : ce que fait le mannequin. 1 immobile, 2 garde debout, 3 garde accroupie, 4 combo en boucle, 5 coup bas en boucle, 6 projectile en boucle. Touche **0** : vider l'énergie.
+- Énergie : 4 segments. Un spécial ou une esquive coûte 1 segment, l'ultime la barre pleine. Elle se remplit en frappant, en encaissant, en parant et en chargeant (maintenir K, immobile et sans défense). Un coup du combo qui touche peut être annulé en spécial.
 - Défense : maintenir **Garde** (L) ou reculer pour parer ; appuyer sur Garde **juste avant** l'impact = contre parfait ; appuyer sur Garde **pendant qu'on encaisse** = esquive mystique (coûte 1 segment d'énergie).
 - `fight.gd` (l'arène) fait avancer le combat image par image : commandes → mouvements → séparation des corps → vérification des coups.
 - **Rectangle vert** : zone où l'on peut être touché. **Rectangle rouge** : zone de frappe, visible quand le coup peut toucher.

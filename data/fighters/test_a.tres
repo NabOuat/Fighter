@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://data/attack_data.gd" id="1_5wd2k"]
 [ext_resource type="Script" path="res://data/fighter_data.gd" id="2_yxg3j"]
+[ext_resource type="Script" path="res://data/projectile_data.gd" id="3_yxg3j"]
 
 [sub_resource type="Resource" id="Resource_kujnm"]
 script = ExtResource("1_5wd2k")
@@ -49,6 +50,72 @@ hit_level = 2
 pushback = 80.0
 hitbox = Rect2(4, -12, 28, 10)
 
+[sub_resource type="Resource" id="Resource_6kels"]
+script = ExtResource("1_5wd2k")
+startup = 1
+active = 1
+recovery = 0
+damage = 80
+hitstun = 20
+blockstun = 16
+pushback = 140.0
+hitstop = 7
+chip_damage = 15
+hitbox = Rect2(0, 0, 0, 0)
+
+[sub_resource type="Resource" id="Resource_2wiyv"]
+script = ExtResource("3_yxg3j")
+hit = SubResource("Resource_6kels")
+color = Color(1, 0.8, 0.3, 1)
+
+[sub_resource type="Resource" id="Resource_oaweq"]
+script = ExtResource("1_5wd2k")
+startup = 12
+active = 1
+recovery = 22
+damage = 0
+hitstun = 18
+blockstun = 14
+pushback = 120.0
+hitstop = 6
+energy_cost = 100
+projectile = SubResource("Resource_2wiyv")
+hitbox = Rect2(0, 0, 0, 0)
+
+[sub_resource type="Resource" id="Resource_g6h8e"]
+script = ExtResource("1_5wd2k")
+startup = 6
+active = 14
+recovery = 16
+damage = 90
+hitstun = 22
+blockstun = 18
+pushback = 180.0
+knockdown = true
+hitstop = 8
+energy_cost = 100
+chip_damage = 15
+dash_speed = 260.0
+hitbox = Rect2(-4, -46, 30, 40)
+
+[sub_resource type="Resource" id="Resource_74fr4"]
+script = ExtResource("1_5wd2k")
+startup = 10
+active = 8
+recovery = 30
+damage = 300
+hitstun = 30
+blockstun = 26
+pushback = 220.0
+knockdown = true
+hitstop = 15
+energy_cost = 400
+chip_damage = 40
+dash_speed = 300.0
+invulnerable_startup = true
+is_ultimate = true
+hitbox = Rect2(-6, -54, 42, 54)
+
 [resource]
 script = ExtResource("2_yxg3j")
 id = &"test_a"
@@ -56,4 +123,7 @@ name_key = "FIGHTER_TEST_A_NAME"
 combo = Array[ExtResource("1_5wd2k")]([SubResource("Resource_qicc2"), SubResource("Resource_gc7rf"), SubResource("Resource_jnp6v")])
 low_attack = SubResource("Resource_nudj1")
 air_attack = SubResource("Resource_kujnm")
+special_1 = SubResource("Resource_oaweq")
+special_2 = SubResource("Resource_g6h8e")
+ultimate = SubResource("Resource_74fr4")
 placeholder_color = Color(0.85, 0.65, 0.2, 1)

@@ -35,6 +35,20 @@ enum HitLevel { HIGH, MID, LOW }
 ## Arrêt de l'image à l'impact, en frames : donne la sensation de puissance.
 @export_range(0, 20) var hitstop := 5
 
+@export_group("Coup spécial")
+## Énergie dépensée : 100 = 1 segment, 400 = barre pleine (ultime).
+@export_range(0, 400) var energy_cost := 0
+## Vie retirée même quand l'adversaire pare (les coups normaux n'en retirent pas).
+@export_range(0, 100) var chip_damage := 0
+## Vitesse vers l'avant pendant le temps actif (pour les attaques foncées), en pixels par seconde.
+@export_range(0, 600) var dash_speed := 0.0
+## Projectile lancé à la fin de la préparation (vide = pas de projectile).
+@export var projectile: ProjectileData
+## Coché : intouchable pendant la préparation.
+@export var invulnerable_startup := false
+## Coché : c'est l'ultime (arrêt du combat et mise en scène avant le coup).
+@export var is_ultimate := false
+
 @export_group("Zone de frappe")
 ## Rectangle qui touche, en pixels, mesuré depuis les pieds du combattant
 ## tourné vers la droite : x vers l'avant, y négatif vers le haut.

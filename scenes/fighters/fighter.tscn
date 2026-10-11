@@ -18,6 +18,10 @@ shape = SubResource("Shape_body")
 visible = false
 mouse_filter = 2
 
+[node name="Aura" type="ColorRect" parent="."]
+visible = false
+mouse_filter = 2
+
 [node name="Pivot" type="Node2D" parent="."]
 
 [node name="Body" type="ColorRect" parent="Pivot"]
