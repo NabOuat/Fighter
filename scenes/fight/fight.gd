@@ -105,6 +105,7 @@ var support_index := 0
 @onready var popup_label: Label = $HUD/PopupLabel
 @onready var dim: ColorRect = $Dim
 @onready var debug_label: Label = $DebugLabel
+@onready var touch_controls: TouchControls = $TouchControls
 
 
 func _ready() -> void:
@@ -121,6 +122,7 @@ func _ready() -> void:
 	# le mannequin a le soutien B.
 	player.support = TEST_SUPPORTS[0]
 	dummy.support = TEST_SUPPORTS[1]
+	touch_controls.fighter = player
 	_start_match()
 
 

@@ -25,3 +25,8 @@ FIGHT_DRAW,Égalité,Draw
 FIGHT_ROUND_WINNER,%s gagne la manche,%s wins the round
 FIGHT_MATCH_WINNER,Victoire : %s !,%s wins!
 FIGHT_PRESS_RESTART,Appuie sur Attaque pour rejouer,Press Attack to play again
+TOUCH_ATTACK,Attaque,Attack
+TOUCH_SPECIAL,Spécial,Special
+TOUCH_GUARD,Garde,Guard
+TOUCH_ASSIST,Soutien,Assist
+TOUCH_ULTIMATE,Ultime,Ultimate

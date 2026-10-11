@@ -1,0 +1,86 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/touch_controls.gd" id="1_controls"]
+[ext_resource type="Script" path="res://scenes/ui/touch_joystick.gd" id="2_joystick"]
+[ext_resource type="Script" path="res://scenes/ui/touch_button_look.gd" id="3_look"]
+
+[sub_resource type="CircleShape2D" id="Shape_attack"]
+radius = 26.0
+
+[sub_resource type="CircleShape2D" id="Shape_special"]
+radius = 20.0
+
+[sub_resource type="CircleShape2D" id="Shape_guard"]
+radius = 20.0
+
+[sub_resource type="CircleShape2D" id="Shape_assist"]
+radius = 17.0
+
+[sub_resource type="CircleShape2D" id="Shape_ultimate"]
+radius = 17.0
+
+[node name="TouchControls" type="CanvasLayer"]
+layer = 2
+script = ExtResource("1_controls")
+
+[node name="Joystick" type="Node2D" parent="."]
+position = Vector2(62, 212)
+script = ExtResource("2_joystick")
+
+[node name="Attack" type="TouchScreenButton" parent="."]
+position = Vector2(430, 222)
+shape = SubResource("Shape_attack")
+passby_press = true
+action = "attack"
+
+[node name="Look" type="Node2D" parent="Attack"]
+script = ExtResource("3_look")
+radius = 24.0
+color = Color(1, 0.76, 0.24, 1)
+label_key = "TOUCH_ATTACK"
+
+[node name="Special" type="TouchScreenButton" parent="."]
+position = Vector2(378, 240)
+shape = SubResource("Shape_special")
+passby_press = true
+action = "special"
+
+[node name="Look" type="Node2D" parent="Special"]
+script = ExtResource("3_look")
+color = Color(0.25, 0.88, 0.82, 1)
+label_key = "TOUCH_SPECIAL"
+
+[node name="Guard" type="TouchScreenButton" parent="."]
+position = Vector2(448, 170)
+shape = SubResource("Shape_guard")
+passby_press = true
+action = "guard"
+
+[node name="Look" type="Node2D" parent="Guard"]
+script = ExtResource("3_look")
+color = Color(0.55, 0.65, 1, 1)
+label_key = "TOUCH_GUARD"
+
+[node name="Assist" type="TouchScreenButton" parent="."]
+position = Vector2(396, 190)
+shape = SubResource("Shape_assist")
+action = "assist"
+
+[node name="Look" type="Node2D" parent="Assist"]
+script = ExtResource("3_look")
+radius = 15.0
+color = Color(0.45, 0.85, 0.4, 1)
+label_key = "TOUCH_ASSIST"
+font_size = 7
+
+[node name="Ultimate" type="TouchScreenButton" parent="."]
+position = Vector2(448, 124)
+shape = SubResource("Shape_ultimate")
+action = "ultimate"
+
+[node name="Look" type="Node2D" parent="Ultimate"]
+script = ExtResource("3_look")
+radius = 15.0
+color = Color(1, 0.45, 0.3, 1)
+label_key = "TOUCH_ULTIMATE"
+font_size = 7

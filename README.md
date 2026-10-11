@@ -7,7 +7,7 @@ Moteur : Godot 4.7 (version Standard, langage GDScript).
 
 1. Lance Godot (`Godot_v4.7.2-stable_win64.exe`).
 2. Dans le gestionnaire de projets, ouvre `Documents/legendz-fighting`.
-3. Appuie sur **F5** (ou le bouton ▶ en haut à droite) pour lancer le jeu.
+3. Appuie sur **F5** (ou le bouton ▶ en haut à droite) pour lancer le jeu : il démarre sur l'arène de combat (prototype).
 
 ## Organisation des dossiers
 
@@ -47,7 +47,7 @@ personnage jouable), `stages/` (les arènes), `ui/` (barres de vie, boutons tact
 | Soutien | I |
 | Pause | Échap ou P |
 
-Les contrôles tactiles viendront avec l'écran de combat.
+**Sur téléphone** : joystick en bas à gauche (on peut poser le pouce n'importe où dans cette zone), boutons Attaque, Spécial, Garde, Soutien et Ultime à droite (l'Ultime et le Soutien sont grisés quand ils ne sont pas prêts). Sur PC, ils s'affichent aussi et se cliquent à la souris.
 
 ## Règles du projet
 
