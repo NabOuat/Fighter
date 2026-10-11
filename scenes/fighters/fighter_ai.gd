@@ -59,6 +59,8 @@ var _dodge_tried := false
 var _punish_key := ""
 var _cancel_key := ""
 var _air_attack_done := false
+## Vrai pendant une charge d'énergie (et non un appui court sur Spécial).
+var _charging := false
 
 
 ## seed : graine du hasard (0 = différente à chaque partie, autre = parties rejouables).
@@ -72,6 +74,17 @@ func _init(level: Difficulty = Difficulty.NORMAL, seed := 0) -> void:
 
 ## Appelée à chaque frame par l'arène, avant que le combattant lise ses intentions.
 func update(me: Fighter, op: Fighter, projectiles: Array[Projectile]) -> void:
+	_decide(me, op, projectiles)
+	# Un appui court sur Spécial lance un coup spécial : si l'IA a commencé une
+	# CHARGE et qu'elle est interrompue avant 10 frames, elle garde le bouton
+	# enfoncé jusqu'au seuil, sinon elle lancerait un spécial sans le vouloir.
+	if _charging and not me.intent.special and me.special_held_frames > 0 			and me.special_held_frames < Fighter.CHARGE_THRESHOLD_FRAMES:
+		me.intent.special = true
+	if not me.intent.special and me.special_held_frames == 0:
+		_charging = false
+
+
+func _decide(me: Fighter, op: Fighter, projectiles: Array[Projectile]) -> void:
 	var intent := me.intent
 	for key in intent:
 		intent[key] = false
@@ -101,8 +114,10 @@ func update(me: Fighter, op: Fighter, projectiles: Array[Projectile]) -> void:
 	if _try_punish(me, op, distance, s):
 		return
 
-	# 5. Suivre le plan, ou en choisir un nouveau.
-	if _plan_frame >= _plan_length and _think_cooldown == 0:
+	# 5. Suivre le plan. Quand il est fini, attendre la prochaine décision sans rien faire.
+	if _plan_frame >= _plan_length:
+		if _think_cooldown > 0:
+			return
 		_choose_plan(me, op, distance, s)
 	_follow_plan(me, op, distance, toward)
 	_plan_frame += 1
@@ -139,7 +154,8 @@ func _defend(me: Fighter, op: Fighter, projectiles: Array[Projectile], distance:
 ## qui arrive. Renvoie {} s'il n'y a rien, sinon {key, low, frames_to_hit}.
 func _find_threat(me: Fighter, op: Fighter, projectiles: Array[Projectile], distance: float) -> Dictionary:
 	var attack := op.current_attack
-	if attack and op.state in [Fighter.State.ATTACK, Fighter.State.JUMP]:
+	var facing_me := op.facing == (1 if me.global_position.x > op.global_position.x else -1)
+	if attack and facing_me and op.state in [Fighter.State.ATTACK, Fighter.State.JUMP]:
 		var before_end := attack.startup + attack.active - op.attack_frame
 		var reach := attack.hitbox.position.x + attack.hitbox.size.x + attack.dash_speed / 60.0 * attack.active + 14.0
 		if before_end >= 0 and distance < reach and attack.hitbox.has_area():
@@ -284,6 +300,7 @@ func _follow_plan(me: Fighter, op: Fighter, distance: float, toward: int) -> voi
 			intent.assist = f == 0
 		Plan.CHARGE:
 			# On arrête de charger si l'adversaire s'approche.
+			_charging = true
 			intent.special = true
 			if op and distance < MID:
 				_plan_length = f
