@@ -22,7 +22,7 @@ func start_arena(training := true) -> void:
 	p = fight.get_node("Player")
 	d = fight.get_node("Dummy")
 	p.is_player = false
-	fight.dummy_mode = fight.DummyMode.STAND
+	fight.tools.dummy_mode = fight.tools.DummyMode.STAND
 	if training:
 		fight.training = true
 		fight._reset_training()
@@ -44,16 +44,16 @@ func run(n: int, hold := {}, taps := {}) -> void:
 ## Le mannequin reste immobile pendant la mise en place, puis passe au mode demandé
 ## au moment exact où commence la situation testée.
 func setup(player_x: float, dummy_x: float, mode: int, energy := 400.0, support := 0) -> void:
-	fight.dummy_mode = fight.DummyMode.STAND
+	fight.tools.dummy_mode = fight.tools.DummyMode.STAND
 	fight._reset_training()
-	fight.support_index = support
-	p.support = fight.TEST_SUPPORTS[support]
+	fight.tools.support_index = support
+	p.support = fight.tools.TEST_SUPPORTS[support]
 	await run(1)
 	p.position.x = player_x
 	d.position.x = dummy_x
 	await run(8)
-	fight.dummy_mode = mode
-	fight.frame_count = 1000
+	fight.tools.dummy_mode = mode
+	fight.tools.frame_count = 1000
 	p.health = Fighter.MAX_HEALTH
 	d.health = Fighter.MAX_HEALTH
 	p.energy = energy
@@ -75,6 +75,13 @@ func section(title: String) -> void:
 
 func finish() -> void:
 	print("\n%d/%d vérifications réussies" % [checks - failures, checks])
+	# Fermeture propre : on libère l'arène, puis on laisse au moteur audio (qui
+	# tourne à part, en temps réel) le temps de libérer les sons arrêtés.
+	paused = false
+	fight.queue_free()
+	for i in 10:
+		OS.delay_msec(20)
+		await process_frame
 	quit(1 if failures > 0 else 0)
 
 

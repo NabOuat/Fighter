@@ -4,7 +4,7 @@ extends "res://tests/test_base.gd"
 
 func _initialize() -> void:
 	await start_arena()
-	var M = fight.DummyMode
+	var M = fight.tools.DummyMode
 
 	section("Sons")
 	var missing := []
@@ -35,7 +35,7 @@ func _initialize() -> void:
 	check("un coup paré fait des étincelles bleues", fight.effects.spawned > before)
 
 	await setup(280, 305, M.ATTACK)
-	fight.frame_count = 79
+	fight.tools.frame_count = 79
 	before = fight.effects.spawned
 	await run(30, {}, {"guard_pressed": [4]})
 	check("un contre parfait fait son effet", fight.effects.spawned > before)
@@ -44,7 +44,7 @@ func _initialize() -> void:
 	var x_before := d.position.x
 	fight.pause_menu.set_paused(true)
 	check("la pause affiche le menu", paused and fight.pause_menu.visible)
-	fight.dummy_mode = M.ATTACK
+	fight.tools.dummy_mode = M.ATTACK
 	for i in 30:
 		await process_frame
 	check("pendant la pause, le combat est figé", d.position.x == x_before and d.state != Fighter.State.ATTACK)

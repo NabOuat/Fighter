@@ -5,7 +5,7 @@ extends "res://tests/test_base.gd"
 
 func _initialize() -> void:
 	await start_arena()
-	var M = fight.DummyMode
+	var M = fight.tools.DummyMode
 
 	section("Étape 1 : toucher et encaisser")
 	await setup(287, 310, M.STAND)
@@ -51,13 +51,13 @@ func _initialize() -> void:
 	check("reculer pare le combo du mannequin", p.health == 1000, "vie %d" % p.health)
 
 	await setup(280, 305, M.ATTACK)
-	fight.frame_count = 79
+	fight.tools.frame_count = 79
 	await run(30, {}, {"guard_pressed": [4]})
 	check("contre parfait : le joueur n'est pas touché", p.health == 1000, "vie %d" % p.health)
 	check("contre parfait : l'attaquant est sans défense", d.state == Fighter.State.HITSTUN, state_name(d))
 
 	await setup(280, 305, M.ATTACK)
-	fight.frame_count = 79
+	fight.tools.frame_count = 79
 	await run(8)
 	var dodged := false
 	for i in 30:
@@ -68,7 +68,7 @@ func _initialize() -> void:
 	check("l'esquive fait réapparaître dans le dos", p.position.x > d.position.x, "joueur %.0f, mannequin %.0f" % [p.position.x, d.position.x])
 
 	await setup(280, 305, M.ATTACK)
-	fight.frame_count = 74
+	fight.tools.frame_count = 74
 	var accidental_dodge := false
 	for i in 24:
 		await run(1, {}, {"guard_pressed": [0]} if i == 4 else {})
@@ -95,7 +95,7 @@ func _initialize() -> void:
 	check("projectile paré : usure de 15", d.health == 985, "vie %d" % d.health)
 
 	await setup(150, 330, M.PROJECTILE)
-	fight.frame_count = 79
+	fight.tools.frame_count = 79
 	await run(3, {"special": true})
 	var both_seen := false
 	for i in 60:
@@ -130,7 +130,7 @@ func _initialize() -> void:
 	check("sans énergie, aucun spécial ne part", fight.projectiles.is_empty() and int(p.energy) == 50)
 
 	await setup(150, 330, M.PROJECTILE, 0.0)
-	fight.frame_count = 79
+	fight.tools.frame_count = 79
 	var parried := false
 	for i in 90:
 		var near := false
@@ -138,7 +138,7 @@ func _initialize() -> void:
 			if projectile.shooter == d and absf(projectile.global_position.x - p.global_position.x) < 26:
 				near = true
 		await run(1, {}, {"guard_pressed": [0]} if near and not parried else {})
-		parried = parried or (fight.popup_label.visible and fight.popup_label.text == "FIGHT_PARRY")
+		parried = parried or (fight.hud.popup_label.visible and fight.hud.popup_label.text == "FIGHT_PARRY")
 	check("contrer un projectile n'étourdit pas le lanceur", parried and d.state != Fighter.State.HITSTUN and p.health == 1000, "%s, vie %d" % [state_name(d), p.health])
 
 	finish()

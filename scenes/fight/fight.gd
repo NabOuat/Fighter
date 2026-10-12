@@ -14,19 +14,13 @@ extends Node2D
 ## - Combat : 2 manches gagnantes, chrono de 60 secondes, K.O. et temps écoulé.
 ## - Entraînement : pas de chrono, personne ne peut être mis K.O., énergie pleine.
 ##
+## L'affichage est dans la scène HUD (scenes/ui/fight_hud), les outils de test
+## (mannequin, touches 0 à 8, Y, T) dans TrainingTools.
+##
 ## Lance cette scène seule avec F6 pour tester.
 
 ## Les étapes d'un combat.
 enum Phase { INTRO, FIGHT, ROUND_OVER, MATCH_OVER }
-## Ce que fait le mannequin (touches 1 à 8 pendant le test). AI = l'ordinateur joue vraiment.
-enum DummyMode { STAND, GUARD_HIGH, GUARD_LOW, ATTACK, ATTACK_LOW, PROJECTILE, ASSIST, AI }
-
-## Soutiens de test, à faire défiler avec la touche T : attaque, protection, soin.
-const TEST_SUPPORTS: Array[FighterData] = [
-	preload("res://data/fighters/test_a.tres"),
-	preload("res://data/fighters/test_b.tres"),
-	preload("res://data/fighters/test_c.tres"),
-]
 
 ## Manches à gagner pour remporter le combat.
 const ROUNDS_TO_WIN := 2
@@ -50,9 +44,6 @@ const START_X_PLAYER := 170.0
 const START_X_DUMMY := 310.0
 ## Hauteur du sol (les soutiens apparaissent toujours au sol).
 const FLOOR_Y := 230.0
-## Le mannequin agit toutes les 80 frames (1,3 seconde).
-const DUMMY_PERIOD := 80
-const POPUP_FRAMES := 50
 ## Durée de l'arrêt du combat au début de l'ultime.
 const ULTIMATE_FREEZE_FRAMES := 45
 
@@ -87,14 +78,9 @@ var round_winners: Array[Fighter] = []
 
 var hitstop := 0
 var ultimate_freeze := 0
-var dummy_mode: DummyMode = DummyMode.AI
-## L'adversaire contrôlé par l'ordinateur (touche Y : changer la difficulté).
-var ai := FighterAI.new(FighterAI.Difficulty.NORMAL)
 var frame_count := 0
-var popup_frames := 0
 var projectiles: Array[Projectile] = []
 var assists: Array[Assist] = []
-var support_index := 0
 var shake_frames := 0
 var shake_strength := 0.0
 var _shake_rng := RandomNumberGenerator.new()
@@ -102,22 +88,9 @@ var _shake_rng := RandomNumberGenerator.new()
 @onready var player: Fighter = $Player
 @onready var dummy: Fighter = $Dummy
 @onready var fighters: Array[Fighter] = [player, dummy]
-@onready var player_bar: HealthBar = $HUD/PlayerBar
-@onready var dummy_bar: HealthBar = $HUD/DummyBar
-@onready var player_energy: EnergyBar = $HUD/PlayerEnergy
-@onready var dummy_energy: EnergyBar = $HUD/DummyEnergy
-@onready var player_assist: AssistGauge = $HUD/PlayerAssist
-@onready var dummy_assist: AssistGauge = $HUD/DummyAssist
-@onready var player_markers: WinMarkers = $HUD/PlayerWins
-@onready var dummy_markers: WinMarkers = $HUD/DummyWins
-@onready var player_name: Label = $HUD/PlayerName
-@onready var dummy_name: Label = $HUD/DummyName
-@onready var timer_label: Label = $HUD/TimerLabel
-@onready var announce_label: Label = $HUD/AnnounceLabel
-@onready var combo_label: Label = $HUD/ComboLabel
-@onready var popup_label: Label = $HUD/PopupLabel
+@onready var hud: FightHUD = $HUD
+@onready var tools: TrainingTools = $TrainingTools
 @onready var dim: ColorRect = $Dim
-@onready var debug_label: Label = $DebugLabel
 @onready var touch_controls: TouchControls = $TouchControls
 @onready var camera: Camera2D = $Camera
 @onready var effects: HitEffects = $HitEffects
@@ -128,10 +101,9 @@ var _shake_rng := RandomNumberGenerator.new()
 func _ready() -> void:
 	player.opponent = dummy
 	dummy.opponent = player
-	player_name.text = player.data.name_key
-	dummy_name.text = dummy.data.name_key
+	hud.show_names(player, dummy)
 	for fighter in fighters:
-		fighter.dodged.connect(_show_popup.bind("FIGHT_DODGE"))
+		fighter.dodged.connect(hud.show_popup.bind("FIGHT_DODGE"))
 		fighter.projectile_launched.connect(_on_projectile_launched)
 		fighter.ultimate_started.connect(_on_ultimate_started)
 		fighter.assist_called.connect(_on_assist_called)
@@ -139,10 +111,8 @@ func _ready() -> void:
 		fighter.dodged.connect(sounds.play.bind("dodge"))
 	pause_menu.restart_requested.connect(restart)
 	pause_menu.mode_toggled.connect(toggle_training)
-	# Pas encore de menu : le joueur a le soutien A (touche T pour changer),
-	# le mannequin a le soutien B.
-	player.support = TEST_SUPPORTS[0]
-	dummy.support = TEST_SUPPORTS[1]
+	# Pas encore de menu de sélection : les outils de test donnent les soutiens.
+	tools.setup(player, dummy)
 	touch_controls.fighter = player
 	_start_match()
 
@@ -151,7 +121,7 @@ func _physics_process(delta: float) -> void:
 	frame_count += 1
 	phase_frames += 1
 	if training or phase == Phase.FIGHT:
-		_drive_dummy()
+		tools.drive_dummy(projectiles)
 		for fighter in fighters:
 			fighter.poll_input()
 	else:
@@ -204,18 +174,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			restart()
 		KEY_M:
 			toggle_training()
-		KEY_0:
-			for fighter in fighters:
-				fighter.energy = 0.0
-		KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8:
-			dummy_mode = (event.physical_keycode - KEY_1) as DummyMode
-			frame_count = 0
-		KEY_Y:
-			ai.difficulty = ((ai.difficulty + 1) % FighterAI.Difficulty.size()) as FighterAI.Difficulty
-		KEY_T:
-			support_index = (support_index + 1) % TEST_SUPPORTS.size()
-			player.support = TEST_SUPPORTS[support_index]
-			player.assist_cooldown = 0
 
 
 # --- Déroulement du combat ---------------------------------------------------
@@ -258,7 +216,6 @@ func _start_round() -> void:
 
 
 ## En entraînement : pas de chrono, personne ne peut être mis K.O., énergie pleine.
-## Touche 0 : vider l'énergie pour tester comment elle se remplit.
 func _reset_training() -> void:
 	_clear_effects()
 	for fighter in fighters:
@@ -352,28 +309,6 @@ func _winner_text(winners: Array[Fighter], key: String) -> String:
 	if winners.size() != 1:
 		return tr("FIGHT_DRAW")
 	return tr(key) % tr(winners[0].data.name_key)
-
-
-# --- Mannequin ---------------------------------------------------------------
-
-## Donne ses commandes au mannequin selon le mode choisi.
-func _drive_dummy() -> void:
-	if dummy_mode == DummyMode.AI:
-		ai.update(dummy, player, projectiles)
-		return
-	var intent := dummy.intent
-	var beat := frame_count % DUMMY_PERIOD
-	intent.guard = dummy_mode in [DummyMode.GUARD_HIGH, DummyMode.GUARD_LOW]
-	intent.crouch = dummy_mode in [DummyMode.GUARD_LOW, DummyMode.ATTACK_LOW]
-	if dummy_mode in [DummyMode.ATTACK, DummyMode.ATTACK_LOW]:
-		# Trois appuis espacés de 6 frames : le combo complet (ou un coup bas).
-		intent.attack = beat in [0, 6, 12]
-	# Un appui court sur Spécial : le mannequin lance son projectile.
-	intent.special = dummy_mode == DummyMode.PROJECTILE and beat < 3
-	if dummy_mode == DummyMode.PROJECTILE:
-		dummy.energy = Fighter.MAX_ENERGY
-	# Le mannequin appelle son soutien dès qu'il est rechargé.
-	intent.assist = dummy_mode == DummyMode.ASSIST and beat == 0
 
 
 # --- Collisions --------------------------------------------------------------
@@ -472,7 +407,7 @@ func _apply(result: Fighter.HitResult, attack: AttackData, attacker: Fighter, de
 			sounds.play("parry")
 			hitstop = maxi(hitstop, 12)
 			defender.add_energy(ENERGY_ON_PARRY)
-			_show_popup("FIGHT_PARRY")
+			hud.show_popup("FIGHT_PARRY")
 
 
 ## Les attaques de soutien touchent comme des coups venus de loin :
@@ -570,14 +505,14 @@ func _clear_effects() -> void:
 	hitstop = 0
 	ultimate_freeze = 0
 	slowmo_frames = 0
-	popup_frames = 0
 	shake_frames = 0
+	hud.clear_popup()
 
 
 func _on_ultimate_started(_fighter: Fighter) -> void:
 	sounds.play("ultimate")
 	ultimate_freeze = ULTIMATE_FREEZE_FRAMES
-	_show_popup("FIGHT_ULTIMATE")
+	hud.show_popup("FIGHT_ULTIMATE")
 
 
 ## Un combo s'arrête dès que celui qui encaisse peut de nouveau agir.
@@ -585,11 +520,6 @@ func _end_finished_combos() -> void:
 	for fighter in fighters:
 		if fighter.is_free():
 			fighter.opponent.combo_hits = 0
-
-
-func _show_popup(text_key: String) -> void:
-	popup_label.text = text_key
-	popup_frames = POPUP_FRAMES
 
 
 # --- Affichage ---------------------------------------------------------------
@@ -611,31 +541,9 @@ func _update_shake() -> void:
 
 
 func _update_hud() -> void:
-	player_bar.set_ratio(float(player.health) / Fighter.MAX_HEALTH)
-	dummy_bar.set_ratio(float(dummy.health) / Fighter.MAX_HEALTH)
-	player_energy.set_ratio(player.energy / Fighter.MAX_ENERGY)
-	dummy_energy.set_ratio(dummy.energy / Fighter.MAX_ENERGY)
-	player_assist.show_fighter(player)
-	dummy_assist.show_fighter(dummy)
-	player_markers.visible = not training
-	dummy_markers.visible = not training
-	player_markers.set_wins(player_wins)
-	dummy_markers.set_wins(dummy_wins)
-	# Le chrono affiche les secondes restantes, arrondies au-dessus (59,2 s → 60).
-	timer_label.text = "--" if training else str(ceili(timer_frames / 60.0))
-	announce_label.text = "" if training else _announce_text()
-	announce_label.visible = announce_label.text != ""
-	combo_label.visible = player.combo_hits >= 2
-	combo_label.text = tr("FIGHT_COMBO_HITS") % player.combo_hits
-	popup_frames = maxi(0, popup_frames - 1)
-	popup_label.visible = popup_frames > 0
+	hud.refresh(player, dummy, player_wins, dummy_wins, not training,
+			-1 if training else timer_frames, "" if training else _announce_text())
 	# Pendant l'arrêt de l'ultime, l'écran s'assombrit.
 	dim.visible = ultimate_freeze > 0
 	pause_menu.show_mode(training)
-	# Texte de débogage pour le développeur, absent du jeu final
-	# (c'est pour ça qu'il n'est pas dans le fichier de traductions).
-	debug_label.text = "%s | P1 %s E%d [T: %s] | Dummy [%s %s] | M mode 1-8 dummy Y IA R reset" % [
-		"TRAINING" if training else Phase.keys()[phase],
-		Fighter.State.keys()[player.state], int(player.energy), player.support.id,
-		DummyMode.keys()[dummy_mode], FighterAI.Difficulty.keys()[ai.difficulty],
-	]
+	tools.show_debug("TRAINING" if training else Phase.keys()[phase])

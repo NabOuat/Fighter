@@ -6,8 +6,8 @@ extends "res://tests/test_base.gd"
 func play_match(player_ai: FighterAI, dummy_ai: FighterAI) -> String:
 	fight.training = false
 	fight._start_match()
-	fight.dummy_mode = fight.DummyMode.AI
-	fight.ai = dummy_ai
+	fight.tools.dummy_mode = fight.tools.DummyMode.AI
+	fight.tools.ai = dummy_ai
 	for i in 15000:
 		player_ai.update(p, d, fight.projectiles)
 		await physics_frame
@@ -29,14 +29,14 @@ func _initialize() -> void:
 	var wasted := 0
 	for trial in 10:
 		fight._reset_training()
-		fight.dummy_mode = fight.DummyMode.AI
-		fight.ai = FighterAI.new(D.NORMAL, 100 + trial)
+		fight.tools.dummy_mode = fight.tools.DummyMode.AI
+		fight.tools.ai = FighterAI.new(D.NORMAL, 100 + trial)
 		d.energy = 150.0
 		p.position.x = 60
 		d.position.x = 420
 		await run(2)
-		fight.ai._start_plan(FighterAI.Plan.CHARGE, 60)
-		fight.ai._think_cooldown = 99
+		fight.tools.ai._start_plan(FighterAI.Plan.CHARGE, 60)
+		fight.tools.ai._think_cooldown = 99
 		await run(4)
 		p.position.x = 360
 		await run(20)
@@ -46,13 +46,13 @@ func _initialize() -> void:
 
 	# Un plan terminé n'est plus exécuté en attendant la décision suivante.
 	fight._reset_training()
-	fight.dummy_mode = fight.DummyMode.AI
-	fight.ai = FighterAI.new(D.EASY, 5)
+	fight.tools.dummy_mode = fight.tools.DummyMode.AI
+	fight.tools.ai = FighterAI.new(D.EASY, 5)
 	p.position.x = 60
 	d.position.x = 420
 	await run(2)
-	fight.ai._start_plan(FighterAI.Plan.APPROACH, 10)
-	fight.ai._think_cooldown = 60
+	fight.tools.ai._start_plan(FighterAI.Plan.APPROACH, 10)
+	fight.tools.ai._think_cooldown = 60
 	var start_x := d.position.x
 	await run(40)
 	var walked := start_x - d.position.x

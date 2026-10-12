@@ -4,7 +4,7 @@ extends "res://tests/test_base.gd"
 
 func _initialize() -> void:
 	await start_arena()
-	var M = fight.DummyMode
+	var M = fight.tools.DummyMode
 
 	section("Appel et recharge")
 	await setup(200, 300, M.STAND, 400.0, 0)
@@ -29,7 +29,7 @@ func _initialize() -> void:
 
 	section("Bouclier")
 	await setup(150, 330, M.PROJECTILE, 400.0, 1)
-	fight.frame_count = 79
+	fight.tools.frame_count = 79
 	var called := false
 	for i in 90:
 		var near := false
@@ -43,8 +43,8 @@ func _initialize() -> void:
 	await setup(280, 305, M.STAND, 400.0, 1)
 	await run(2, {}, {"assist": [0]})
 	await run(8)
-	fight.dummy_mode = M.ATTACK
-	fight.frame_count = 79
+	fight.tools.dummy_mode = M.ATTACK
+	fight.tools.frame_count = 79
 	await run(40)
 	check("le bouclier arrête un combo, même collé à l'adversaire", p.health == 1000, "vie %d" % p.health)
 
@@ -61,7 +61,7 @@ func _initialize() -> void:
 	check("l'adversaire peut parer le soutien", d.health == 1000, "vie %d" % d.health)
 
 	await setup(280, 305, M.ATTACK, 400.0, 0)
-	fight.frame_count = 79
+	fight.tools.frame_count = 79
 	var tried := false
 	for i in 30:
 		await run(1, {}, {"assist": [0]} if p.state == Fighter.State.HITSTUN and not tried else {})
@@ -76,14 +76,14 @@ func _initialize() -> void:
 
 	# Un soutien qui lance un projectile (comme la lance de Sékou) ne doit pas
 	# empêcher le combattant de lancer le sien.
-	var spear_support: FighterData = fight.TEST_SUPPORTS[0].duplicate(true)
+	var spear_support: FighterData = fight.tools.TEST_SUPPORTS[0].duplicate(true)
 	var spear := AssistData.new()
 	spear.kind = AssistData.Kind.ATTACK
 	var throw := AttackData.new()
 	throw.startup = 6
 	throw.active = 1
 	throw.recovery = 12
-	throw.projectile = fight.TEST_SUPPORTS[0].special_1.projectile
+	throw.projectile = fight.tools.TEST_SUPPORTS[0].special_1.projectile
 	spear.attack = throw
 	spear_support.assist = spear
 	await setup(120, 400, M.STAND, 400.0, 0)
@@ -96,8 +96,8 @@ func _initialize() -> void:
 	await run(120)
 	check("le compteur de projectiles revient à zéro", p.active_projectiles == 0)
 
-	fight.dummy_mode = M.ASSIST
-	fight.frame_count = 79
+	fight.tools.dummy_mode = M.ASSIST
+	fight.tools.frame_count = 79
 	await run(3)
 	check("le mannequin appelle son soutien", fight.assists.size() >= 1)
 	fight._reset_training()

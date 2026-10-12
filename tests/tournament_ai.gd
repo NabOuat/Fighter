@@ -14,8 +14,8 @@ func reset_stats():
 
 func play_match(ai_p, ai_d, max_frames := 15000) -> Dictionary:
 	fight._start_match()
-	fight.dummy_mode = fight.DummyMode.AI
-	fight.ai = ai_d
+	fight.tools.dummy_mode = fight.tools.DummyMode.AI
+	fight.tools.ai = ai_d
 	var prev := {p: p.state, d: d.state}
 	var time_ups := 0
 	var last_phase = fight.phase
@@ -33,7 +33,7 @@ func play_match(ai_p, ai_d, max_frames := 15000) -> Dictionary:
 				if f.state == Fighter.State.JUMP: stats[f].jumps += 1
 				if f.state == Fighter.State.CHARGE: stats[f].charges += 1
 				prev[f] = f.state
-		if fight.popup_label.visible and fight.popup_label.text == "FIGHT_PARRY" and fight.popup_frames == fight.POPUP_FRAMES - 1:
+		if fight.hud.popup_label.visible and fight.hud.popup_label.text == "FIGHT_PARRY" and fight.hud.popup_frames == fight.hud.POPUP_FRAMES - 1:
 			for f in [p, d]:
 				if f.flash_frames > 0 and f.flash_color == Fighter.PARRY_FLASH: stats[f].parries += 1
 		if fight.phase == fight.Phase.ROUND_OVER and last_phase == fight.Phase.FIGHT and fight.round_result_key == "FIGHT_TIME_UP":
@@ -51,7 +51,7 @@ func _initialize():
 	root.add_child(fight)
 	await process_frame
 	p = fight.get_node("Player"); d = fight.get_node("Dummy"); p.is_player = false
-	fight.dummy_mode = fight.DummyMode.AI
+	fight.tools.dummy_mode = fight.tools.DummyMode.AI
 	# Même fiche et même soutien des deux côtés, pour un duel équitable.
 	d.data = p.data
 	d.support = p.support
