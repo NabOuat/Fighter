@@ -56,6 +56,14 @@ const POPUP_FRAMES := 50
 ## Durée de l'arrêt du combat au début de l'ultime.
 const ULTIMATE_FREEZE_FRAMES := 45
 
+## Tremblement de l'écran sur les gros coups : force (pixels) et durée (frames).
+const SHAKE_HEAVY := 3.0
+const SHAKE_HEAVY_FRAMES := 8
+const SHAKE_KO := 5.0
+const SHAKE_KO_FRAMES := 20
+## Un coup est « lourd » (gros bruit, grosses étincelles) à partir de ces dégâts.
+const HEAVY_DAMAGE := 60
+
 ## Énergie gagnée selon ce qui arrive (sur 400 pour la barre pleine).
 const ENERGY_ON_HIT := 20.0
 const ENERGY_WHEN_HIT := 12.0
@@ -87,6 +95,9 @@ var popup_frames := 0
 var projectiles: Array[Projectile] = []
 var assists: Array[Assist] = []
 var support_index := 0
+var shake_frames := 0
+var shake_strength := 0.0
+var _shake_rng := RandomNumberGenerator.new()
 
 @onready var player: Fighter = $Player
 @onready var dummy: Fighter = $Dummy
@@ -108,6 +119,10 @@ var support_index := 0
 @onready var dim: ColorRect = $Dim
 @onready var debug_label: Label = $DebugLabel
 @onready var touch_controls: TouchControls = $TouchControls
+@onready var camera: Camera2D = $Camera
+@onready var effects: HitEffects = $HitEffects
+@onready var sounds: SoundBank = $Sounds
+@onready var pause_menu: PauseMenu = $PauseMenu
 
 
 func _ready() -> void:
@@ -120,6 +135,10 @@ func _ready() -> void:
 		fighter.projectile_launched.connect(_on_projectile_launched)
 		fighter.ultimate_started.connect(_on_ultimate_started)
 		fighter.assist_called.connect(_on_assist_called)
+		fighter.attack_started.connect(_on_attack_started)
+		fighter.dodged.connect(sounds.play.bind("dodge"))
+	pause_menu.restart_requested.connect(restart)
+	pause_menu.mode_toggled.connect(toggle_training)
 	# Pas encore de menu : le joueur a le soutien A (touche T pour changer),
 	# le mannequin a le soutien B.
 	player.support = TEST_SUPPORTS[0]
@@ -152,6 +171,7 @@ func _physics_process(delta: float) -> void:
 
 	if not training:
 		_update_match()
+	_update_shake()
 	_update_hud()
 
 
@@ -181,16 +201,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	match event.physical_keycode:
 		KEY_R:
-			if training:
-				_reset_training()
-			else:
-				_start_match()
+			restart()
 		KEY_M:
-			training = not training
-			if training:
-				_reset_training()
-			else:
-				_start_match()
+			toggle_training()
 		KEY_0:
 			for fighter in fighters:
 				fighter.energy = 0.0
@@ -206,6 +219,20 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 # --- Déroulement du combat ---------------------------------------------------
+
+## Recommence : le combat entier, ou la mise en place de l'entraînement.
+func restart() -> void:
+	if training:
+		_reset_training()
+	else:
+		_start_match()
+
+
+## Passe du mode combat au mode entraînement, et inversement.
+func toggle_training() -> void:
+	training = not training
+	restart()
+
 
 func _start_match() -> void:
 	training = false
@@ -227,6 +254,7 @@ func _start_round() -> void:
 	dummy.position = Vector2(START_X_DUMMY, FLOOR_Y)
 	timer_frames = ROUND_FRAMES
 	_set_phase(Phase.INTRO)
+	sounds.play("gong")
 
 
 ## En entraînement : pas de chrono, personne ne peut être mis K.O., énergie pleine.
@@ -278,12 +306,15 @@ func _end_round(by_ko: bool) -> void:
 				round_winners.append(fighter)
 		round_result_key = "FIGHT_KO" if round_winners.size() == 1 else "FIGHT_DOUBLE_KO"
 		slowmo_frames = KO_SLOWMO_FRAMES
+		sounds.play("ko")
+		_shake(SHAKE_KO, SHAKE_KO_FRAMES)
 	else:
 		if player.health > dummy.health:
 			round_winners.append(player)
 		elif dummy.health > player.health:
 			round_winners.append(dummy)
 		round_result_key = "FIGHT_TIME_UP"
+		sounds.play("gong")
 	# Double K.O. ou vie égale au chrono : la manche compte pour les deux.
 	if round_winners.is_empty():
 		round_winners.append_array(fighters)
@@ -370,13 +401,16 @@ func _resolve_hits() -> void:
 		if _hits_barrier(hitbox, defender):
 			attacker.attack_has_hit = true
 			hitstop = maxi(hitstop, 4)
+			_barrier_feedback(hitbox.get_center())
 			continue
-		if not hitbox.intersects(defender.get_hurtbox_rect()):
+		var hurtbox := defender.get_hurtbox_rect()
+		if not hitbox.intersects(hurtbox):
 			continue
 		attacker.attack_has_hit = true
 		# Les coups qui coûtent de l'énergie n'en rapportent pas.
 		var grants_energy := attack.energy_cost == 0
-		_apply(defender.receive_attack(attack, attacker), attack, attacker, defender, grants_energy)
+		var point := hitbox.intersection(hurtbox).get_center()
+		_apply(defender.receive_attack(attack, attacker), attack, attacker, defender, grants_energy, point)
 
 
 func _resolve_projectiles() -> void:
@@ -390,17 +424,20 @@ func _resolve_projectiles() -> void:
 					and projectile.get_rect().intersects(other.get_rect()):
 				finished.append_array([projectile, other])
 				hitstop = maxi(hitstop, 4)
+				effects.burst(HitEffects.Kind.CLASH, (projectile.global_position + other.global_position) / 2.0)
+				sounds.play("block")
 				break
 		if projectile in finished:
 			continue
 		var target := projectile.shooter.opponent
 		if _hits_barrier(projectile.get_rect(), target):
 			finished.append(projectile)
+			_barrier_feedback(projectile.global_position)
 		elif projectile.get_rect().intersects(target.get_hurtbox_rect()):
 			finished.append(projectile)
 			var hit := projectile.data.hit
 			# Un projectile vient toujours d'un coup spécial : il ne rapporte pas d'énergie.
-			_apply(target.receive_attack(hit, projectile.shooter, true), hit, projectile.shooter, target, false)
+			_apply(target.receive_attack(hit, projectile.shooter, true), hit, projectile.shooter, target, false, projectile.global_position)
 		elif projectile.is_expired(ARENA_LEFT - 20.0, ARENA_RIGHT + 20.0):
 			finished.append(projectile)
 	for projectile in finished:
@@ -408,21 +445,31 @@ func _resolve_projectiles() -> void:
 		_remove_projectile(projectile)
 
 
-## Ce qui se passe après un coup : arrêt sur image, combo, énergie, messages.
-func _apply(result: Fighter.HitResult, attack: AttackData, attacker: Fighter, defender: Fighter, grants_energy: bool) -> void:
+## Ce qui se passe après un coup : arrêt sur image, combo, énergie, messages,
+## étincelles et bruitage au point de contact.
+func _apply(result: Fighter.HitResult, attack: AttackData, attacker: Fighter, defender: Fighter, grants_energy: bool, point: Vector2) -> void:
 	match result:
 		Fighter.HitResult.HIT:
+			var heavy := attack.damage >= HEAVY_DAMAGE or attack.knockdown
+			effects.burst(HitEffects.Kind.HIT_HEAVY if heavy else HitEffects.Kind.HIT_LIGHT, point)
+			sounds.play("hit_heavy" if heavy else "hit_light")
+			if heavy:
+				_shake(SHAKE_HEAVY, SHAKE_HEAVY_FRAMES)
 			attacker.combo_hits += 1
 			hitstop = maxi(hitstop, attack.hitstop)
 			if grants_energy:
 				attacker.add_energy(ENERGY_ON_HIT)
 			defender.add_energy(ENERGY_WHEN_HIT)
 		Fighter.HitResult.BLOCKED:
+			effects.burst(HitEffects.Kind.BLOCK, point)
+			sounds.play("block")
 			hitstop = maxi(hitstop, int(attack.hitstop * 0.5))
 			if grants_energy:
 				attacker.add_energy(ENERGY_ON_BLOCKED)
 			defender.add_energy(ENERGY_WHEN_BLOCKING)
 		Fighter.HitResult.PARRIED:
+			effects.burst(HitEffects.Kind.PARRY, point)
+			sounds.play("parry")
 			hitstop = maxi(hitstop, 12)
 			defender.add_energy(ENERGY_ON_PARRY)
 			_show_popup("FIGHT_PARRY")
@@ -437,7 +484,8 @@ func _resolve_assists() -> void:
 		if hitbox.has_area() and not _hits_barrier(hitbox, defender) and hitbox.intersects(defender.get_hurtbox_rect()):
 			assist.hit_done = true
 			var attack := assist.data.attack
-			_apply(defender.receive_attack(attack, assist.caller, true), attack, assist.caller, defender, false)
+			var point := hitbox.intersection(defender.get_hurtbox_rect()).get_center()
+			_apply(defender.receive_attack(attack, assist.caller, true), attack, assist.caller, defender, false, point)
 	_remove_finished_assists()
 
 
@@ -462,7 +510,20 @@ func _hits_barrier(rect: Rect2, protected: Fighter) -> bool:
 
 # --- Soutiens, projectiles, effets -------------------------------------------
 
+## Un coup ou un projectile arrêté par le bouclier d'un soutien.
+func _barrier_feedback(at: Vector2) -> void:
+	effects.burst(HitEffects.Kind.BLOCK, at)
+	sounds.play("block")
+
+
+func _on_attack_started(attack: AttackData) -> void:
+	if attack.is_ultimate:
+		return
+	sounds.play("special" if attack.energy_cost > 0 else "whoosh", -4.0)
+
+
 func _on_assist_called(caller: Fighter) -> void:
+	sounds.play("assist")
 	var assist := Assist.new()
 	assist.summon(caller.support.assist, caller, FLOOR_Y, ARENA_LEFT, ARENA_RIGHT)
 	assist.projectile_requested.connect(_launch_projectile.bind(true))
@@ -510,9 +571,11 @@ func _clear_effects() -> void:
 	ultimate_freeze = 0
 	slowmo_frames = 0
 	popup_frames = 0
+	shake_frames = 0
 
 
 func _on_ultimate_started(_fighter: Fighter) -> void:
+	sounds.play("ultimate")
 	ultimate_freeze = ULTIMATE_FREEZE_FRAMES
 	_show_popup("FIGHT_ULTIMATE")
 
@@ -530,6 +593,22 @@ func _show_popup(text_key: String) -> void:
 
 
 # --- Affichage ---------------------------------------------------------------
+
+func _shake(strength: float, frames: int) -> void:
+	shake_strength = maxf(shake_strength if shake_frames > 0 else 0.0, strength)
+	shake_frames = maxi(shake_frames, frames)
+
+
+## Le tremblement s'atténue à chaque frame ; seul l'affichage bouge, pas le combat.
+func _update_shake() -> void:
+	if shake_frames > 0:
+		shake_frames -= 1
+		var strength := shake_strength * shake_frames / float(SHAKE_HEAVY_FRAMES)
+		strength = minf(strength, shake_strength)
+		camera.offset = Vector2(_shake_rng.randf_range(-strength, strength), _shake_rng.randf_range(-strength, strength)).round()
+	else:
+		camera.offset = Vector2.ZERO
+
 
 func _update_hud() -> void:
 	player_bar.set_ratio(float(player.health) / Fighter.MAX_HEALTH)
@@ -552,6 +631,7 @@ func _update_hud() -> void:
 	popup_label.visible = popup_frames > 0
 	# Pendant l'arrêt de l'ultime, l'écran s'assombrit.
 	dim.visible = ultimate_freeze > 0
+	pause_menu.show_mode(training)
 	# Texte de débogage pour le développeur, absent du jeu final
 	# (c'est pour ça qu'il n'est pas dans le fichier de traductions).
 	debug_label.text = "%s | P1 %s E%d [T: %s] | Dummy [%s %s] | M mode 1-8 dummy Y IA R reset" % [

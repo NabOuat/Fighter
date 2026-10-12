@@ -30,3 +30,9 @@ TOUCH_SPECIAL,Spécial,Special
 TOUCH_GUARD,Garde,Guard
 TOUCH_ASSIST,Soutien,Assist
 TOUCH_ULTIMATE,Ultime,Ultimate
+PAUSE_TITLE,Pause,Pause
+PAUSE_RESUME,Reprendre,Resume
+PAUSE_RESTART,Recommencer,Restart
+PAUSE_TRAINING,Mode entraînement,Training mode
+PAUSE_MATCH,Mode combat,Match mode
+TOUCH_PAUSE,II,II

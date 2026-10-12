@@ -9,6 +9,9 @@
 [ext_resource type="Script" path="res://scenes/ui/assist_gauge.gd" id="7_assist_gauge"]
 [ext_resource type="Script" path="res://scenes/ui/win_markers.gd" id="8_win_markers"]
 [ext_resource type="PackedScene" path="res://scenes/ui/touch_controls.tscn" id="9_touch"]
+[ext_resource type="Script" path="res://scenes/fight/hit_effects.gd" id="10_effects"]
+[ext_resource type="Script" path="res://scenes/fight/sound_bank.gd" id="11_sounds"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="12_pause"]
 
 [sub_resource type="RectangleShape2D" id="Shape_floor"]
 size = Vector2(480, 40)
@@ -68,6 +71,15 @@ data = ExtResource("3_test_a")
 position = Vector2(310, 230)
 data = ExtResource("4_test_b")
 is_player = false
+
+[node name="HitEffects" type="Node2D" parent="."]
+script = ExtResource("10_effects")
+
+[node name="Camera" type="Camera2D" parent="."]
+position = Vector2(240, 135)
+
+[node name="Sounds" type="Node" parent="."]
+script = ExtResource("11_sounds")
 
 [node name="HUD" type="CanvasLayer" parent="."]
 
@@ -224,3 +236,5 @@ offset_bottom = 70.0
 theme_override_font_sizes/font_size = 8
 
 [node name="TouchControls" parent="." instance=ExtResource("9_touch")]
+
+[node name="PauseMenu" parent="." instance=ExtResource("12_pause")]

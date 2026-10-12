@@ -18,6 +18,8 @@ signal projectile_launched(data: ProjectileData, shooter: Fighter)
 signal ultimate_started(fighter: Fighter)
 ## Émis quand le combattant appelle son soutien (l'arène le fait apparaître).
 signal assist_called(fighter: Fighter)
+## Émis au début de chaque attaque (sert aux bruitages).
+signal attack_started(attack: AttackData)
 
 enum State { IDLE, WALK, CROUCH, JUMP, ATTACK, GUARD, BLOCKSTUN, HITSTUN, KNOCKDOWN, GETUP, DODGE, CHARGE }
 ## Ce qui arrive quand un coup atteint le combattant.
@@ -424,6 +426,7 @@ func _prepare_attack(attack: AttackData) -> void:
 	attack_frame = 0
 	attack_has_hit = false
 	attack_serial += 1
+	attack_started.emit(attack)
 
 
 ## Lance le spécial demandé (1 ou 2) s'il y a assez d'énergie. Renvoie vrai s'il part.
