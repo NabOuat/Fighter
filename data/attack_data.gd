@@ -34,6 +34,9 @@ enum HitLevel { HIGH, MID, LOW }
 @export var knockdown := false
 ## Arrêt de l'image à l'impact, en frames : donne la sensation de puissance.
 @export_range(0, 20) var hitstop := 5
+## Lance l'adversaire en l'air (vitesse vers le haut, 0 = non) : il peut alors
+## être frappé à nouveau en l'air (jonglage). Prioritaire sur « knockdown ».
+@export_range(0, 600) var launch := 0.0
 
 @export_group("Coup spécial")
 ## Énergie dépensée : 100 = 1 segment, 400 = barre pleine (ultime).

@@ -37,8 +37,9 @@ const TOUCH_SCALE_MAX := 1.6
 
 ## Liste de tous les combattants jouables. Pour en ajouter un :
 ## crée son fichier .tres dans data/fighters/ puis ajoute-le ici.
-## (Combattants de test en attendant les vrais héros.)
+## Pokou a ses vrais dessins ; les combattants de test attendent les autres héros.
 var roster: Array[FighterData] = [
+	preload("res://data/fighters/abla_pokou.tres"),
 	preload("res://data/fighters/test_a.tres"),
 	preload("res://data/fighters/test_b.tres"),
 	preload("res://data/fighters/test_c.tres"),

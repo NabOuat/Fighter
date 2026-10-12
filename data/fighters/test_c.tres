@@ -44,6 +44,7 @@ blockstun = 14
 pushback = 160.0
 knockdown = true
 hitstop = 8
+launch = 330.0
 hitbox = Rect2(6, -36, 30, 14)
 
 [sub_resource type="Resource" id="Resource_11mww"]

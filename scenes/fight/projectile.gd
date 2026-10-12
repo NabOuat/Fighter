@@ -19,6 +19,17 @@ func launch(projectile_data: ProjectileData, from: Fighter, origin: Vector2, dir
 	direction = dir
 	position = origin
 	from_assist = by_assist
+	# Le dessin animé du projectile s'il existe, sinon un rectangle de couleur.
+	if data.sprite_frames and data.sprite_frames.has_animation(data.animation):
+		var art := AnimatedSprite2D.new()
+		art.sprite_frames = data.sprite_frames
+		art.animation = data.animation
+		art.flip_h = dir == -1
+		art.scale = Vector2.ONE * FighterSprite.ART_SCALE
+		art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		add_child(art)
+		art.play()
+		return
 	var view := ColorRect.new()
 	view.color = data.color
 	view.size = data.size

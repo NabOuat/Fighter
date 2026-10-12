@@ -1,0 +1,41 @@
+{
+ "hero": "abla_pokou",
+ "source_dir": "C:/Users/OUATTARA AFOR/Downloads",
+ "reference": "idle",
+ "airborne": [
+  "jump",
+  "air_attack"
+ ],
+ "effect_only": {
+  "special_1_fx": true
+ },
+ "animations": {
+  "idle": "spritelab-custom-mv5m7ujn_frames.zip",
+  "walk_forward": "spritelab-ai-walk-forward-mv5mbjxk_frames.zip",
+  "walk_back": "spritelab-custom-mv5mcyog_frames.zip",
+  "crouch": "spritelab-custom-mv5me0rj_frames.zip",
+  "jump": "spritelab-custom-mv5mfd7p_frames.zip",
+  "guard": "spritelab-custom-mv5mgq2w_frames.zip",
+  "guard_crouch": "spritelab-custom-mv5mi1d5_frames.zip",
+  "hit": "spritelab-custom-mv5mj6k9_frames.zip",
+  "knockdown": "spritelab-custom-mv5mlnh9_frames.zip",
+  "ko": "spritelab-custom-mv5mrlvp_frames.zip",
+  "charge": "spritelab-custom-mv5mtiqf_frames.zip",
+  "dodge": "spritelab-custom-mv5mux9j_frames.zip",
+  "throw": "spritelab-custom-mv5mw6qc_frames.zip",
+  "victory": "spritelab-custom-mv5mymd4_frames.zip",
+  "intro": "spritelab-custom-mv5mzqgz_frames.zip",
+  "combo_1": "spritelab-custom-mv5lfsf6_frames.zip",
+  "combo_2": "spritelab-custom-mv5lhhbw_frames.zip",
+  "combo_3": "spritelab-custom-mv5lmbts_frames.zip",
+  "low_attack": "spritelab-custom-mv5lnlnf_frames.zip",
+  "air_attack": "spritelab-custom-mv5ltorz_frames.zip",
+  "special_1": "spritelab-custom-mv5lyd4h_frames.zip",
+  "special_2": "spritelab-custom-mv5lzk2k_frames.zip",
+  "assist": "spritelab-custom-mv5m17r9_frames.zip",
+  "special_1_fx": "spritelab-custom-mv5nhnqz_frames.zip"
+ },
+ "rescale": [
+  "victory"
+ ]
+}

@@ -1,0 +1,171 @@
+[gd_resource type="Resource" script_class="FighterData" format=3]
+
+[ext_resource type="Script" path="res://data/attack_data.gd" id="1_shfho"]
+[ext_resource type="Script" path="res://data/assist_data.gd" id="2_qb8jw"]
+[ext_resource type="Script" path="res://data/fighter_data.gd" id="3_1m44f"]
+[ext_resource type="Script" path="res://data/projectile_data.gd" id="4_fbksh"]
+[ext_resource type="SpriteFrames" path="res://assets/characters/abla_pokou/abla_pokou_frames.tres" id="5_1wjk0"]
+
+[sub_resource type="Resource" id="Resource_hv283"]
+script = ExtResource("1_shfho")
+active = 40
+recovery = 0
+damage = 60
+hit_level = 0
+hitstun = 18
+blockstun = 12
+hitbox = Rect2(0, -24, 26, 22)
+
+[sub_resource type="Resource" id="Resource_uvsg2"]
+script = ExtResource("1_shfho")
+active = 30
+damage = 60
+hitstun = 26
+blockstun = 14
+pushback = 60.0
+hitstop = 6
+dash_speed = 300.0
+hitbox = Rect2(-4, -46, 26, 40)
+
+[sub_resource type="Resource" id="Resource_8c20s"]
+script = ExtResource("2_qb8jw")
+attack = SubResource("Resource_uvsg2")
+
+[sub_resource type="Resource" id="Resource_baegl"]
+script = ExtResource("1_shfho")
+recovery = 10
+
+[sub_resource type="Resource" id="Resource_ljdth"]
+script = ExtResource("1_shfho")
+startup = 5
+recovery = 12
+damage = 45
+hitstun = 18
+blockstun = 12
+pushback = 100.0
+hitbox = Rect2(6, -40, 24, 10)
+
+[sub_resource type="Resource" id="Resource_3c8lg"]
+script = ExtResource("1_shfho")
+startup = 8
+active = 4
+recovery = 20
+damage = 70
+hitstun = 20
+blockstun = 14
+pushback = 160.0
+knockdown = true
+hitstop = 8
+launch = 330.0
+hitbox = Rect2(6, -36, 30, 14)
+
+[sub_resource type="Resource" id="Resource_2wxe7"]
+script = ExtResource("1_shfho")
+startup = 6
+recovery = 14
+damage = 50
+hit_level = 2
+pushback = 80.0
+hitbox = Rect2(4, -12, 28, 10)
+
+[sub_resource type="Resource" id="Resource_qlwwl"]
+script = ExtResource("1_shfho")
+startup = 1
+active = 1
+recovery = 0
+damage = 80
+hitstun = 20
+blockstun = 16
+pushback = 140.0
+hitstop = 7
+chip_damage = 15
+hitbox = Rect2(0, 0, 0, 0)
+
+[sub_resource type="Resource" id="Resource_8aryx"]
+script = ExtResource("4_fbksh")
+hit = SubResource("Resource_qlwwl")
+size = Vector2(30, 27)
+spawn_offset = Vector2(21, -13.5)
+color = Color(1, 0.8, 0.3, 1)
+sprite_frames = ExtResource("5_1wjk0")
+
+[sub_resource type="Resource" id="Resource_3tpa1"]
+script = ExtResource("1_shfho")
+startup = 12
+active = 1
+recovery = 22
+damage = 0
+hitstun = 18
+blockstun = 14
+pushback = 120.0
+hitstop = 6
+energy_cost = 100
+projectile = SubResource("Resource_8aryx")
+hitbox = Rect2(0, 0, 0, 0)
+
+[sub_resource type="Resource" id="Resource_r800p"]
+script = ExtResource("1_shfho")
+startup = 6
+active = 14
+recovery = 16
+damage = 90
+hitstun = 22
+blockstun = 18
+pushback = 180.0
+knockdown = true
+hitstop = 8
+energy_cost = 100
+chip_damage = 15
+dash_speed = 260.0
+hitbox = Rect2(-4, -46, 30, 40)
+
+[sub_resource type="Resource" id="Resource_m0wtl"]
+script = ExtResource("1_shfho")
+startup = 3
+active = 2
+recovery = 24
+damage = 110
+hitstun = 20
+pushback = 130.0
+knockdown = true
+hitstop = 9
+is_throw = true
+hitbox = Rect2(4, -44, 24, 44)
+
+[sub_resource type="Resource" id="Resource_hcg35"]
+script = ExtResource("1_shfho")
+startup = 10
+active = 8
+recovery = 30
+damage = 300
+hitstun = 30
+blockstun = 26
+pushback = 220.0
+knockdown = true
+hitstop = 15
+energy_cost = 400
+chip_damage = 40
+dash_speed = 300.0
+invulnerable_startup = true
+is_ultimate = true
+hitbox = Rect2(-6, -54, 42, 54)
+
+[resource]
+script = ExtResource("3_1m44f")
+id = &"abla_pokou"
+name_key = "FIGHTER_POKOU_NAME"
+origin_key = "FIGHTER_POKOU_ORIGIN"
+bio_key = "FIGHTER_POKOU_BIO"
+defense = 4
+speed = 2
+reach = 1
+combo = Array[ExtResource("1_shfho")]([SubResource("Resource_baegl"), SubResource("Resource_ljdth"), SubResource("Resource_3c8lg")])
+low_attack = SubResource("Resource_2wxe7")
+air_attack = SubResource("Resource_hv283")
+throw = SubResource("Resource_m0wtl")
+special_1 = SubResource("Resource_3tpa1")
+special_2 = SubResource("Resource_r800p")
+ultimate = SubResource("Resource_hcg35")
+assist = SubResource("Resource_8c20s")
+placeholder_color = Color(0.85, 0.55, 0.2, 1)
+sprite_frames = ExtResource("5_1wjk0")

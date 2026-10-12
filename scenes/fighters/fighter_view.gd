@@ -9,8 +9,9 @@ extends Node2D
 ##
 ## Les repères sont dessinés devant tout (z_index du nœud View), même devant l'adversaire.
 ## Il ne décide de rien : il lit l'état du combattant (son parent) à chaque frame.
-## Quand les vrais sprites arriveront, ils remplaceront les rectangles ici ;
-## les repères resteront (désactivables dans les réglages).
+## Si la fiche du combattant a des animations (sprite_frames), le vrai dessin
+## (FighterSprite) remplace les rectangles ; les repères restent (désactivables
+## dans les réglages), et les zones de frappe aussi en entraînement.
 
 const LOW_COLOR := Color(0.35, 0.75, 1.0)
 const HIGH_COLOR := Color(1.0, 0.6, 0.2)
@@ -28,6 +29,24 @@ const MARKER_SIZE := 5.0
 @onready var hurtbox_view: ColorRect = $"../HurtboxView"
 @onready var hitbox_view: ColorRect = $"../HitboxView"
 
+## Le vrai dessin, s'il existe (sinon null : on garde les rectangles).
+var sprite: FighterSprite
+
+
+## Crée le dessin si la fiche du combattant a des animations. Appelée quand la
+## fiche change (les menus peuvent changer de combattant).
+func use_data(data: FighterData) -> void:
+	if sprite:
+		sprite.queue_free()
+		sprite = null
+	if data and data.sprite_frames:
+		sprite = FighterSprite.new()
+		sprite.name = "Sprite"
+		fighter.add_child.call_deferred(sprite)
+		fighter.move_child.call_deferred(sprite, 0)
+		sprite.setup(fighter)
+	pivot.visible = sprite == null
+
 
 ## Met les rectangles et les repères à jour. Appelée par le combattant à chaque frame.
 func refresh() -> void:
@@ -35,6 +54,8 @@ func refresh() -> void:
 	var attack := fighter.current_attack
 	var frame := fighter.attack_frame
 	var height := fighter.current_height()
+	if sprite:
+		sprite.refresh()
 	pivot.scale.x = fighter.facing
 	body.size = Vector2(Fighter.BODY_WIDTH, height)
 	body.position = Vector2(-Fighter.BODY_WIDTH / 2.0, -height)
@@ -54,7 +75,7 @@ func refresh() -> void:
 		# Le « bras » montre le coup pendant sa préparation et son temps actif.
 		var rect := fighter.attack_rect(attack)
 		rect.position -= fighter.global_position
-		arm.visible = frame >= attack.startup / 2.0
+		arm.visible = frame >= attack.startup / 2.0 and sprite == null
 		arm.color = data.placeholder_color.darkened(0.2)
 		arm.position = rect.position
 		arm.size = rect.size
@@ -62,7 +83,7 @@ func refresh() -> void:
 		hitbox_view.size = rect.size
 	elif fighter.state in [Fighter.State.GUARD, Fighter.State.BLOCKSTUN]:
 		# En garde, le « bras » devient un bouclier levé devant le corps.
-		arm.visible = true
+		arm.visible = sprite == null
 		arm.color = data.placeholder_color.darkened(0.45)
 		arm.size = Vector2(5, height * 0.7)
 		arm.position = Vector2(fighter.facing * (Fighter.BODY_WIDTH / 2.0) - (5 if fighter.facing == 1 else 0) + fighter.facing * 2, -height + 2)
@@ -71,7 +92,7 @@ func refresh() -> void:
 
 	# L'aura : bleue quand on charge, dorée pendant la préparation de l'ultime.
 	var ultimate_startup := attack != null and attack.is_ultimate and frame <= attack.startup
-	aura.visible = fighter.state == Fighter.State.CHARGE or ultimate_startup
+	aura.visible = (fighter.state == Fighter.State.CHARGE or ultimate_startup) and sprite == null
 	if aura.visible:
 		var pulse := 0.25 + 0.15 * sin(Time.get_ticks_msec() / 60.0)
 		var aura_color := Color(1.0, 0.85, 0.35) if ultimate_startup else Color(0.3, 0.85, 1.0)
@@ -102,8 +123,8 @@ func _draw() -> void:
 		return
 	var height := fighter.current_height()
 	var in_startup := fighter.attack_frame <= attack.startup
-	if in_startup:
-		# Contour lumineux : le coup se prépare.
+	if in_startup and sprite == null:
+		# Contour lumineux : le coup se prépare (avec un vrai dessin, c'est le dessin qui s'éclaire).
 		var outline := Rect2(-Fighter.BODY_WIDTH / 2.0 - 1, -height - 1, Fighter.BODY_WIDTH + 2, height + 2)
 		draw_rect(outline, Color(STARTUP_COLOR, 0.8), false, 1.0)
 	var ahead := fighter.facing * (Fighter.BODY_WIDTH / 2.0 + 6.0)

@@ -16,6 +16,7 @@ const SUCCESS_FRAMES := 70
 const LESSONS := [
 	{"id": "MOVE", "dummy": TrainingTools.DummyMode.STAND, "count": 1},
 	{"id": "COMBO", "dummy": TrainingTools.DummyMode.STAND, "count": 2},
+	{"id": "JUGGLE", "dummy": TrainingTools.DummyMode.STAND, "count": 1},
 	{"id": "GUARD", "dummy": TrainingTools.DummyMode.ATTACK, "count": 3},
 	{"id": "LOW", "dummy": TrainingTools.DummyMode.GUARD_HIGH, "count": 2},
 	{"id": "OVERHEAD", "dummy": TrainingTools.DummyMode.GUARD_LOW, "count": 1},
@@ -135,6 +136,9 @@ func _on_hit_landed(result: Fighter.HitResult, attack: AttackData, attacker: Fig
 	match current_id():
 		"COMBO":
 			if by_player and player.combo_hits >= 3:
+				_add_progress()
+		"JUGGLE":
+			if by_player and player.combo_hits >= 5:
 				_add_progress()
 		"GUARD":
 			if defender == player and result == Fighter.HitResult.BLOCKED:

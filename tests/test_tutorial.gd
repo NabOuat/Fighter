@@ -49,7 +49,18 @@ func _initialize() -> void:
 		# Le 3e coup fait tomber : on attend qu'il se relève.
 		await run(110)
 	await wait_next_lesson()
-	check("le combo de 3 coups, deux fois : réussi", tutorial.current_id() == "GUARD", tutorial.current_id())
+	check("le combo de 3 coups, deux fois : réussi", tutorial.current_id() == "JUGGLE", tutorial.current_id())
+
+	# Jonglage : J J J (lanceur), puis saut vers lui et 2 coups en l'air.
+	p.position.x = 280
+	d.position.x = 302
+	await run(30, {}, {"attack": [0, 5, 10]})
+	while p.current_attack != null:
+		await run(1)
+	for i in 60:
+		await run(1, {"jump": i < 3, "right": i < 3}, {"attack": [0]} if i in [6, 12] else {})
+	await wait_next_lesson()
+	check("le jonglage (5 coups) : réussi", tutorial.current_id() == "GUARD", tutorial.current_id())
 
 	await skip_to("LOW")
 	for i in 2:

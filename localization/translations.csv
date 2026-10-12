@@ -171,3 +171,8 @@ TUTO_ASSIST_TITLE,Le soutien,Support
 TUTO_ASSIST,Appuie sur {assist} : ton allié vient t'aider. Il revient après 15 secondes.,Press {assist}: your ally comes to help. He's back after 15 seconds.
 TUTO_ULTIMATE_TITLE,L'ultime,Ultimate
 TUTO_ULTIMATE,Ta barre d'énergie est pleine : appuie sur {ultimate} pour déclencher ta technique ultime.,Your energy bar is full: press {ultimate} to unleash your ultimate technique.
+FIGHTER_POKOU_NAME,Abla Pokou,Abla Pokou
+FIGHTER_POKOU_ORIGIN,Royaume baoulé,Baoule kingdom
+FIGHTER_POKOU_BIO,"Princesse ashanti, elle mena son peuple vers l'ouest au milieu du XVIIIe siècle, jusqu'au fleuve Comoé, et fonda le royaume baoulé.","Ashanti princess who led her people west in the mid-18th century, as far as the Comoé river, and founded the Baoule kingdom."
+TUTO_JUGGLE_TITLE,Le jonglage,Juggling
+TUTO_JUGGLE,"Le 3e coup du combo lance l'adversaire en l'air. Enchaîne : 3 fois {attack}, puis saute vers lui ({up}) et frappe 2 fois en l'air ({attack}, {attack}). 5 coups !","The 3rd combo hit launches the opponent into the air. Chain it: {attack} 3 times, then jump at him ({up}) and hit twice in the air ({attack}, {attack}). 5 hits!"

@@ -18,3 +18,6 @@ extends Resource
 @export_range(10, 600) var lifetime := 150
 ## Couleur du rectangle temporaire.
 @export var color := Color(0.3, 0.9, 1.0)
+## Animation dessinée du projectile (vide = rectangle de couleur).
+@export var sprite_frames: SpriteFrames
+@export var animation: StringName = &"special_1_fx"

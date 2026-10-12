@@ -39,6 +39,17 @@ const START_X_PLAYER := 170.0
 const START_X_DUMMY := 310.0
 ## Hauteur du sol (les soutiens apparaissent toujours au sol).
 const FLOOR_Y := 230.0
+## Avec de vrais dessins, la caméra zoome sur l'action et suit les combattants
+## (comme Street Fighter) : chaque pixel du dessin tombe sur un pixel de l'écran.
+const ART_ZOOM := 1.75
+## Écart maximal entre les deux combattants avec la caméra zoomée : ils restent
+## tous les deux à l'écran (marge de 16 unités de chaque côté).
+const SCREEN_MARGIN := 16.0
+## La caméra suit les combattants en douceur (0 = immobile, 1 = immédiat).
+const CAMERA_FOLLOW := 0.2
+## Taille de l'écran en unités de combat, sans zoom.
+const SCREEN_SIZE := Vector2(480, 270)
+
 ## Durée de l'arrêt du combat au début de l'ultime.
 const ULTIMATE_FREEZE_FRAMES := 45
 
@@ -56,6 +67,8 @@ var ultimate_freeze := 0
 var frame_count := 0
 var projectiles: Array[Projectile] = []
 var assists: Array[Assist] = []
+## Vrai si un des combattants a de vrais dessins : caméra zoomée qui suit l'action.
+var art_camera := false
 
 @onready var player: Fighter = $Player
 @onready var dummy: Fighter = $Dummy
@@ -69,6 +82,7 @@ var assists: Array[Assist] = []
 @onready var touch_controls: TouchControls = $TouchControls
 @onready var pause_menu: PauseMenu = $PauseMenu
 @onready var match_result: MatchResult = $MatchResult
+@onready var camera: Camera2D = $Camera
 
 
 func _ready() -> void:
@@ -137,9 +151,14 @@ func _setup_from_menus() -> void:
 	var clean := arcade or GameState.mode == GameState.Mode.TUTORIAL
 	tools.set_process_unhandled_input(not clean)
 	tools.debug_label.visible = not clean
+	# Zones de frappe (rouge) et vulnérables (vert) : seulement pour régler les coups
+	# (arène lancée seule), ou avec la touche B en entraînement.
 	for fighter in fighters:
-		fighter.show_boxes = not clean
+		fighter.show_boxes = GameState.mode == GameState.Mode.QUICK
 	hud.show_names(player, dummy)
+	art_camera = player.data.sprite_frames != null or dummy.data.sprite_frames != null
+	camera.zoom = Vector2.ONE * (ART_ZOOM if art_camera else 1.0)
+	_update_camera(true)
 
 
 func _physics_process(delta: float) -> void:
@@ -169,6 +188,7 @@ func _physics_process(delta: float) -> void:
 				and Input.is_action_just_pressed("attack"):
 			start_match()
 	feedback.update()
+	_update_camera()
 	_update_hud()
 
 
@@ -307,8 +327,28 @@ func _separate_fighters() -> void:
 		var side := signf(gap) if gap != 0.0 else float(player.facing)
 		player.position.x -= side * push
 		dummy.position.x += side * push
+	# Caméra zoomée : les deux combattants restent à l'écran, on ne peut pas trop s'éloigner.
+	if art_camera:
+		var max_gap := SCREEN_SIZE.x / ART_ZOOM - 2.0 * SCREEN_MARGIN
+		var spread := dummy.position.x - player.position.x
+		if absf(spread) > max_gap:
+			var excess := (absf(spread) - max_gap) / 2.0 * signf(spread)
+			player.position.x += excess
+			dummy.position.x -= excess
 	for fighter in fighters:
 		fighter.position.x = clampf(fighter.position.x, ARENA_LEFT, ARENA_RIGHT)
+
+
+## Caméra : fixe au centre avec les rectangles ; avec de vrais dessins, elle zoome
+## et suit le milieu des deux combattants, sans sortir de l'arène.
+func _update_camera(snap := false) -> void:
+	if not art_camera:
+		camera.position = SCREEN_SIZE / 2.0
+		return
+	var half := SCREEN_SIZE / ART_ZOOM / 2.0
+	var middle := (player.position.x + dummy.position.x) / 2.0
+	var target := Vector2(clampf(middle, half.x, SCREEN_SIZE.x - half.x), FLOOR_Y + SCREEN_MARGIN - half.y)
+	camera.position = target if snap else camera.position.lerp(target, CAMERA_FOLLOW)
 
 
 func _resolve_hits() -> void:
@@ -490,7 +530,34 @@ func _clear_effects() -> void:
 
 # --- Affichage ---------------------------------------------------------------
 
+## Poses de mise en scène des vrais dessins : entrée en début de manche,
+## victoire pour le gagnant une fois le résultat annoncé.
+func _update_cinematics() -> void:
+	for fighter in fighters:
+		var sprite := fighter.view.sprite
+		if sprite == null:
+			continue
+		sprite.cinematic = ""
+		if training:
+			continue
+		match flow.phase:
+			MatchFlow.Phase.INTRO:
+				sprite.cinematic = "intro"
+				sprite.cinematic_progress = clampf(float(flow.phase_frames) / MatchFlow.INTRO_ROUND_FRAMES, 0.0, 1.0)
+			MatchFlow.Phase.ROUND_OVER, MatchFlow.Phase.MATCH_OVER:
+				var shown := flow.phase == MatchFlow.Phase.MATCH_OVER or flow.phase_frames >= MatchFlow.RESULT_SHOW_FRAMES
+				if shown and fighter in flow.round_winners and fighter.health > 0 and fighter.is_free():
+					sprite.cinematic = "victory"
+					var since := flow.phase_frames - (0 if flow.phase == MatchFlow.Phase.MATCH_OVER else MatchFlow.RESULT_SHOW_FRAMES)
+					sprite.cinematic_progress = clampf(since / 50.0, 0.0, 1.0)
+	# Une pose de mise en scène doit s'afficher même quand le combat est figé.
+	for fighter in fighters:
+		if fighter.view.sprite and fighter.view.sprite.cinematic != "":
+			fighter.view.sprite.refresh()
+
+
 func _update_hud() -> void:
+	_update_cinematics()
 	var header := ""
 	if GameState.mode == GameState.Mode.ARCADE:
 		header = tr("ARCADE_FIGHT_N") % [GameState.arcade_index + 1, GameState.arcade_opponents.size()]

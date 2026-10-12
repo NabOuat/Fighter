@@ -4,7 +4,7 @@ extends Node
 ## retirer facilement du jeu final :
 ## - ce que fait l'adversaire (touches 1 à 8) : immobile, garde, attaques en
 ##   boucle... ou l'IA (8, par défaut), dont on change la difficulté avec Y ;
-## - changer le soutien du joueur (T), vider l'énergie (0) ;
+## - changer le soutien du joueur (T), vider l'énergie (0), afficher les zones de frappe (B) ;
 ## - le texte de débogage en haut de l'écran.
 
 ## Ce que fait le mannequin. AI = l'ordinateur joue vraiment.
@@ -73,6 +73,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			frame_count = 0
 		KEY_Y:
 			ai.difficulty = ((ai.difficulty + 1) % FighterAI.Difficulty.size()) as FighterAI.Difficulty
+		KEY_B:
+			# Afficher ou cacher les zones de frappe.
+			for fighter in [_player, _dummy]:
+				fighter.show_boxes = not fighter.show_boxes
 		KEY_T:
 			support_index = (support_index + 1) % TEST_SUPPORTS.size()
 			_player.support = TEST_SUPPORTS[support_index]

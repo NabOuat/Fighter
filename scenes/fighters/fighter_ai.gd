@@ -141,6 +141,9 @@ func _decide(me: Fighter, op: Fighter, projectiles: Array[Projectile]) -> void:
 				intent.guard_pressed = true
 		return
 	_dodge_tried = false
+	# Jonglé en l'air : on ne peut rien faire.
+	if me.state == Fighter.State.JUGGLE:
+		return
 
 	# 2. Se défendre.
 	if _defend(me, op, projectiles, distance, toward, s):

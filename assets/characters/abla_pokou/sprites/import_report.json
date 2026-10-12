@@ -1,0 +1,147 @@
+{
+ "idle": {
+  "frames": 8,
+  "anchor": 50,
+  "match": 1.0,
+  "ground": 121
+ },
+ "walk_forward": {
+  "frames": 6,
+  "anchor": 54,
+  "match": 0.94,
+  "ground": 121
+ },
+ "walk_back": {
+  "frames": 6,
+  "anchor": 51,
+  "match": 0.88,
+  "ground": 121
+ },
+ "crouch": {
+  "frames": 6,
+  "anchor": 50,
+  "match": 0.94,
+  "ground": 121
+ },
+ "jump": {
+  "frames": 6,
+  "anchor": 61,
+  "match": 0.35,
+  "ground": 121
+ },
+ "guard": {
+  "frames": 6,
+  "anchor": 63,
+  "match": 0.72,
+  "ground": 121
+ },
+ "guard_crouch": {
+  "frames": 6,
+  "anchor": 53,
+  "match": 0.92,
+  "ground": 121
+ },
+ "hit": {
+  "frames": 6,
+  "anchor": 55,
+  "match": 0.86,
+  "ground": 121
+ },
+ "knockdown": {
+  "frames": 6,
+  "anchor": 75,
+  "match": 0.52,
+  "ground": 121
+ },
+ "ko": {
+  "frames": 8,
+  "anchor": 79,
+  "match": 0.46,
+  "ground": 120
+ },
+ "charge": {
+  "frames": 4,
+  "anchor": 49,
+  "match": 0.97,
+  "ground": 121
+ },
+ "dodge": {
+  "frames": 4,
+  "anchor": 54,
+  "match": 0.89,
+  "ground": 121
+ },
+ "throw": {
+  "frames": 6,
+  "anchor": 58,
+  "match": 0.82,
+  "ground": 121
+ },
+ "victory": {
+  "frames": 6,
+  "anchor": 65,
+  "match": 0.45,
+  "ground": 164
+ },
+ "intro": {
+  "frames": 6,
+  "anchor": 52,
+  "match": 0.5,
+  "ground": 121
+ },
+ "combo_1": {
+  "frames": 8,
+  "anchor": 49,
+  "match": 0.96,
+  "ground": 120
+ },
+ "combo_2": {
+  "frames": 8,
+  "anchor": 53,
+  "match": 0.91,
+  "ground": 120
+ },
+ "combo_3": {
+  "frames": 8,
+  "anchor": 64,
+  "match": 0.57,
+  "ground": 121
+ },
+ "low_attack": {
+  "frames": 8,
+  "anchor": 71,
+  "match": 0.77,
+  "ground": 120
+ },
+ "air_attack": {
+  "frames": 8,
+  "anchor": 57,
+  "match": 0.51,
+  "ground": 121
+ },
+ "special_1": {
+  "frames": 8,
+  "anchor": 49,
+  "match": 0.47,
+  "ground": 121
+ },
+ "special_2": {
+  "frames": 8,
+  "anchor": 52,
+  "match": 0.95,
+  "ground": 121
+ },
+ "assist": {
+  "frames": 8,
+  "anchor": 42,
+  "match": 0.7,
+  "ground": 121
+ },
+ "special_1_fx": {
+  "frames": 4,
+  "size": [
+   65,
+   58
+  ]
+ }
+}

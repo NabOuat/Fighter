@@ -21,7 +21,8 @@ signal assist_called(fighter: Fighter)
 ## Émis au début de chaque attaque (sert aux bruitages).
 signal attack_started(attack: AttackData)
 
-enum State { IDLE, WALK, CROUCH, JUMP, ATTACK, GUARD, BLOCKSTUN, HITSTUN, KNOCKDOWN, GETUP, DODGE, CHARGE }
+## JUGGLE : lancé en l'air par un coup, on peut encore être frappé (jonglage).
+enum State { IDLE, WALK, CROUCH, JUMP, ATTACK, GUARD, BLOCKSTUN, HITSTUN, KNOCKDOWN, GETUP, DODGE, CHARGE, JUGGLE }
 ## Ce qui arrive quand un coup atteint le combattant.
 ## MISSED : projection sur un adversaire qu'on ne peut pas saisir (en l'air, sonné...).
 ## TECHED : les deux ont projeté en même temps, personne n'est saisi.
@@ -62,6 +63,17 @@ const THROW_TECH_PUSH := 150.0
 ## Ralentissement du recul à chaque frame (0,85 = perd 15 % de sa vitesse).
 const PUSHBACK_FRICTION := 0.85
 const KNOCKDOWN_LAUNCH := 220.0
+## Jonglage : chaque coup reçu en l'air relance vers le haut, un peu moins à chaque fois.
+const JUGGLE_POP := 200.0
+const JUGGLE_DECAY := 0.8
+const JUGGLE_PUSH := 40.0
+## Au-delà de ce nombre de coups en l'air, on retombe sans pouvoir être touché (pas de combo infini).
+const MAX_JUGGLE_HITS := 4
+## Coups en l'air par saut (le 2e seulement si le 1er a touché).
+const AIR_ATTACKS_PER_JUMP := 2
+## Dégâts des longs combos : -10 % par coup à partir du 3e, jamais moins de 40 %.
+const COMBO_SCALING_STEP := 0.1
+const MIN_COMBO_SCALING := 0.4
 const KNOCKDOWN_FRAMES := 40
 const GETUP_FRAMES := 20
 const FLASH_FRAMES := 4
@@ -70,7 +82,12 @@ const BLOCK_FLASH := Color(0.6, 0.85, 1.0)
 const PARRY_FLASH := Color(0.3, 1.0, 1.0)
 
 ## La fiche du combattant (stats, attaques...).
-@export var data: FighterData
+@export var data: FighterData:
+	set(value):
+		data = value
+		# Nouvelle fiche (choisie dans les menus) : le dessin change aussi.
+		if is_node_ready():
+			view.use_data(value)
 ## Coché : contrôlé par le joueur. Décoché : contrôlé par l'IA ou mannequin.
 @export var is_player := true
 ## Affiche les zones de frappe (rouge) et vulnérables (vert) pour régler les coups.
@@ -109,6 +126,10 @@ var attack_has_hit := false
 var combo_hits := 0
 var stun_frames := 0
 var air_attack_used := false
+## Coups donnés pendant ce saut.
+var air_hits := 0
+## Coups reçus en l'air depuis le lancer (jonglage).
+var juggle_hits := 0
 ## Vrai quand la garde est basse (accroupie).
 var guard_low := false
 var buffered_attack := 0
@@ -155,6 +176,7 @@ func _ready() -> void:
 	if data == null:
 		push_error("Fighter : aucune fiche FighterData assignée dans l'Inspecteur.")
 		return
+	view.use_data(data)
 	reset()
 
 
@@ -281,6 +303,8 @@ func tick(delta: float) -> void:
 			_hitstun_state()
 		State.KNOCKDOWN:
 			_knockdown_state()
+		State.JUGGLE:
+			_juggle_state()
 		State.GETUP:
 			_getup_state()
 		State.DODGE:
@@ -339,6 +363,7 @@ func _ground_state() -> void:
 		velocity.y = -data.jump_strength
 		velocity.x = direction * data.walk_speed()
 		air_attack_used = false
+		air_hits = 0
 		_change_state(State.JUMP)
 		return
 	if intent.crouch:
@@ -353,12 +378,19 @@ func _ground_state() -> void:
 	_change_state(State.WALK if direction != 0 else State.IDLE)
 
 
-## En l'air : on garde son élan, on peut donner un seul coup.
+## En l'air : on garde son élan. Un coup par saut, et un 2e s'il a touché
+## (enchaînement aérien, pour jongler).
 func _jump_state() -> void:
 	if current_attack:
 		attack_frame += 1
+		var chain_ok := attack_has_hit and air_hits < AIR_ATTACKS_PER_JUMP \
+				and attack_frame > current_attack.startup + 2
+		if chain_ok and _consume_attack():
+			air_hits += 1
+			_prepare_attack(data.air_attack)
 	elif not air_attack_used and data.air_attack and _consume_attack():
 		air_attack_used = true
+		air_hits = 1
 		_prepare_attack(data.air_attack)
 
 
@@ -376,6 +408,11 @@ func _attack_state() -> void:
 	# Annulation : un coup du combo qui a touché (ou été paré) peut être
 	# interrompu par un coup spécial. C'est la base des gros combos.
 	if in_recovery and attack.energy_cost == 0 and attack_has_hit and buffered_special > 0 and _try_special():
+		return
+	# Un coup du combo qui a touché peut aussi s'annuler en ultime (barre pleine).
+	if attack.energy_cost == 0 and attack_has_hit and buffered_ultimate > 0 and energy >= MAX_ENERGY and data.ultimate:
+		buffered_ultimate = 0
+		_start_special(data.ultimate)
 		return
 	# Enchaînement : un nouvel appui pendant le coup lance le coup suivant
 	# du combo dès que le coup actuel a fini de pouvoir toucher. Un appui
@@ -419,6 +456,11 @@ func _knockdown_state() -> void:
 			_change_state(State.GETUP)
 
 
+## Jonglé : on vole sans rien pouvoir faire ; en touchant le sol, on est à terre.
+func _juggle_state() -> void:
+	velocity.x *= 0.98
+
+
 func _getup_state() -> void:
 	stun_frames -= 1
 	if stun_frames <= 0:
@@ -449,6 +491,11 @@ func _on_landed() -> void:
 		_change_state(State.IDLE)
 	elif state == State.KNOCKDOWN:
 		stun_frames = KNOCKDOWN_FRAMES
+	elif state == State.JUGGLE:
+		juggle_hits = 0
+		velocity.x = 0
+		stun_frames = KNOCKDOWN_FRAMES
+		_change_state(State.KNOCKDOWN)
 
 
 # --- Attaques ----------------------------------------------------------------
@@ -503,7 +550,7 @@ func can_call_assist() -> bool:
 		return false
 	if assist_cooldown > 0 or assist_active:
 		return false
-	return state not in [State.HITSTUN, State.KNOCKDOWN, State.GETUP, State.DODGE, State.CHARGE]
+	return state not in [State.HITSTUN, State.KNOCKDOWN, State.GETUP, State.DODGE, State.CHARGE, State.JUGGLE]
 
 
 ## Rend des points de vie (soutien de soin), sans dépasser le maximum.
@@ -579,7 +626,7 @@ func _start_dodge() -> void:
 
 ## Vrai si le combattant n'est pas pris dans un combo (sert à compter les combos).
 func is_free() -> bool:
-	return state not in [State.HITSTUN, State.KNOCKDOWN]
+	return state not in [State.HITSTUN, State.KNOCKDOWN, State.JUGGLE]
 
 
 ## Zone de frappe actuelle, en coordonnées de l'arène. Vide si aucun coup ne peut toucher.
@@ -594,6 +641,9 @@ func get_hitbox_rect() -> Rect2:
 ## Zone où le combattant peut être touché. Vide s'il est intouchable.
 func get_hurtbox_rect() -> Rect2:
 	if state in [State.KNOCKDOWN, State.GETUP, State.DODGE]:
+		return Rect2()
+	# Trop jonglé : on retombe sans pouvoir être touché.
+	if state == State.JUGGLE and juggle_hits >= MAX_JUGGLE_HITS:
 		return Rect2()
 	if current_attack and current_attack.invulnerable_startup and attack_frame <= current_attack.startup:
 		return Rect2()
@@ -670,7 +720,9 @@ func _block(attack: AttackData, attacker: Fighter) -> void:
 
 
 func _take_damage(attack: AttackData, attacker: Fighter) -> void:
-	var damage := roundi(attack.damage * attacker.data.damage_multiplier() * data.defense_multiplier())
+	# Les longs combos font de moins en moins mal (combo_hits = coups déjà portés).
+	var scaling := clampf(1.0 - COMBO_SCALING_STEP * maxi(0, attacker.combo_hits - 1), MIN_COMBO_SCALING, 1.0)
+	var damage := roundi(attack.damage * attacker.data.damage_multiplier() * data.defense_multiplier() * scaling)
 	health = maxi(1 if immortal else 0, health - damage)
 	special_held_frames = 0
 	# Seul un appui sur Garde PENDANT qu'on encaisse déclenche l'esquive : un contre
@@ -680,7 +732,18 @@ func _take_damage(attack: AttackData, attacker: Fighter) -> void:
 	combo_index = -1
 	_flash(HIT_FLASH)
 	var direction := _direction_from(attacker)
-	if attack.knockdown or not is_on_floor() or health == 0:
+	if health > 0 and (state == State.JUGGLE or not is_on_floor()):
+		# Déjà en l'air : le coup relance (jonglage).
+		juggle_hits += 1
+		var pop := JUGGLE_POP * pow(JUGGLE_DECAY, juggle_hits - 1)
+		velocity = Vector2(direction * JUGGLE_PUSH, -maxf(pop, attack.launch))
+		_change_state(State.JUGGLE)
+	elif health > 0 and attack.launch > 0.0:
+		# Coup lanceur : l'adversaire décolle et peut être jonglé.
+		juggle_hits = 0
+		velocity = Vector2(direction * attack.pushback * 0.3, -attack.launch)
+		_change_state(State.JUGGLE)
+	elif attack.knockdown or health == 0:
 		velocity = Vector2(direction * attack.pushback, -KNOCKDOWN_LAUNCH)
 		stun_frames = KNOCKDOWN_FRAMES
 		_change_state(State.KNOCKDOWN)

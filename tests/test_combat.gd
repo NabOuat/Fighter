@@ -10,14 +10,20 @@ func _initialize() -> void:
 	section("Étape 1 : toucher et encaisser")
 	await setup(287, 310, M.STAND)
 	var best_combo := 0
+	var launched := false
 	var knocked_down := false
-	for i in 60:
-		await run(1, {}, {"attack": [0]} if i % 6 == 0 else {})
+	for i in 45:
+		await run(1, {}, {"attack": [0]} if i % 6 == 0 and i < 18 else {})
 		best_combo = maxi(best_combo, p.combo_hits)
-		knocked_down = knocked_down or d.state == Fighter.State.KNOCKDOWN
+		launched = launched or d.state == Fighter.State.JUGGLE
 	check("le combo enchaîne 3 coups", best_combo == 3, "meilleur combo %d" % best_combo)
-	check("le 3e coup projette au sol", knocked_down)
-	check("dégâts du combo (142)", d.health == 858, "vie %d" % d.health)
+	# 37 + 41 + 64 x 0,9 (les longs combos font un peu moins mal à partir du 3e coup).
+	check("dégâts du combo (136)", d.health == 864, "vie %d" % d.health)
+	check("le 3e coup lance en l'air", launched)
+	for i in 80:
+		await run(1)
+		knocked_down = knocked_down or d.state == Fighter.State.KNOCKDOWN
+	check("en retombant, il est à terre", knocked_down)
 
 	await setup(280, 305, M.STAND)
 	await run(25, {"crouch": true}, {"attack": [2]})
@@ -153,5 +159,33 @@ func _initialize() -> void:
 			best = maxi(best, p.combo_hits)
 		all_three = all_three and best == 3
 	check("taper vite Attaque 3 fois fait toujours le combo de 3 coups", all_three)
+
+	section("Jonglage")
+	# J J J (lanceur), puis saut vers lui et deux coups en l'air.
+	await setup(280, 302, M.STAND)
+	await run(30, {}, {"attack": [0, 5, 10]})
+	while p.current_attack != null:
+		await run(1)
+	var juggle_best := 0
+	for i in 60:
+		await run(1, {"jump": i < 3, "right": i < 3}, {"attack": [0]} if i in [6, 12] else {})
+		juggle_best = maxi(juggle_best, p.combo_hits)
+	check("lanceur + 2 coups en l'air : combo de 5", juggle_best == 5, "combo %d" % juggle_best)
+
+	await setup(280, 302, M.STAND)
+	d.velocity.y = -330.0
+	d.state = Fighter.State.JUGGLE
+	d.juggle_hits = Fighter.MAX_JUGGLE_HITS
+	await run(1)
+	check("après 4 coups en l'air, il retombe intouchable (pas de combo infini)", not d.get_hurtbox_rect().has_area())
+	await run(80)
+
+	await setup(280, 305, M.STAND, 400.0)
+	var ultimate_seen := false
+	for i in 30:
+		await run(1, {}, {"attack": [0]} if i == 0 else ({"ultimate": [0]} if i == 8 else {}))
+		ultimate_seen = ultimate_seen or p.current_attack == p.data.ultimate
+	check("un coup du combo qui touche s'annule en ultime", ultimate_seen)
+	await run(90)
 
 	finish()
