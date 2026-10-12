@@ -1,0 +1,82 @@
+extends SceneTree
+## Base commune des tests automatiques.
+##
+## Chaque test crée l'arène sans fenêtre, joue des situations précises image par
+## image (comme un joueur très précis), puis vérifie le résultat.
+## Lancer tous les tests : python tools/run_tests.py
+
+const FIGHT_SCENE := "res://scenes/fight/fight.tscn"
+
+var fight
+var p: Fighter
+var d: Fighter
+var checks := 0
+var failures := 0
+
+
+## Crée l'arène, en mode entraînement (pas de chrono, personne n'est mis K.O.).
+func start_arena(training := true) -> void:
+	fight = load(FIGHT_SCENE).instantiate()
+	root.add_child(fight)
+	await process_frame
+	p = fight.get_node("Player")
+	d = fight.get_node("Dummy")
+	p.is_player = false
+	fight.dummy_mode = fight.DummyMode.STAND
+	if training:
+		fight.training = true
+		fight._reset_training()
+	await physics_frame
+
+
+## Joue n frames. hold = touches maintenues ; taps = {touche: [frames où on appuie]}.
+func run(n: int, hold := {}, taps := {}) -> void:
+	for i in n:
+		for key in p.intent:
+			p.intent[key] = hold.get(key, false)
+		for key in taps:
+			if i in taps[key]:
+				p.intent[key] = true
+		await physics_frame
+
+
+## Remet tout en place : positions, mode du mannequin, énergie du joueur.
+## Le mannequin reste immobile pendant la mise en place, puis passe au mode demandé
+## au moment exact où commence la situation testée.
+func setup(player_x: float, dummy_x: float, mode: int, energy := 400.0, support := 0) -> void:
+	fight.dummy_mode = fight.DummyMode.STAND
+	fight._reset_training()
+	fight.support_index = support
+	p.support = fight.TEST_SUPPORTS[support]
+	await run(1)
+	p.position.x = player_x
+	d.position.x = dummy_x
+	await run(8)
+	fight.dummy_mode = mode
+	fight.frame_count = 1000
+	p.health = Fighter.MAX_HEALTH
+	d.health = Fighter.MAX_HEALTH
+	p.energy = energy
+	d.energy = 0.0
+
+
+func check(label: String, ok: bool, detail := "") -> void:
+	checks += 1
+	if ok:
+		print("  OK     ", label)
+	else:
+		failures += 1
+		print("  ÉCHEC  ", label, "   (", detail, ")")
+
+
+func section(title: String) -> void:
+	print("\n", title)
+
+
+func finish() -> void:
+	print("\n%d/%d vérifications réussies" % [checks - failures, checks])
+	quit(1 if failures > 0 else 0)
+
+
+func state_name(fighter: Fighter) -> String:
+	return Fighter.State.keys()[fighter.state]

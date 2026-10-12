@@ -78,3 +78,21 @@ personnage jouable), `stages/` (les arènes), `ui/` (barres de vie, boutons tact
 2. Remplis la fiche dans l'Inspecteur (à droite).
 3. Ajoute ses textes dans `localization/translations.csv`.
 4. Ajoute sa fiche à la liste `roster` dans `autoload/game_state.gd`.
+
+## Tests automatiques
+
+Plus de 80 vérifications rejouent le combat image par image (coups, défense, énergie,
+soutien, manches, tactile, IA). Après chaque modification :
+
+```
+python tools/run_tests.py
+```
+
+Chaque ligne affiche OK ou ÉCHEC ; le bilan final résume tout.
+
+## Tester sur un téléphone Android
+
+Tout est configuré, sauf une étape à faire une seule fois dans Godot :
+**Éditeur → Gérer les modèles d'export → Télécharger et installer** (environ 1 Go).
+Ensuite : active le débogage USB du téléphone, branche-le, et clique sur l'icône Android
+en haut à droite de Godot.

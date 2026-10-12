@@ -1,0 +1,248 @@
+{
+  "combo_1": {
+    "source": "01_Combo_Hit_1.png",
+    "kind": "sprite",
+    "frames": 5,
+    "cell": [
+      96,
+      112
+    ],
+    "anchor": [
+      48,
+      104
+    ],
+    "scale": 0.1678,
+    "expected_frames": 5
+  },
+  "combo_2": {
+    "source": "02_Combo_Hit_2.png",
+    "kind": "sprite",
+    "frames": 5,
+    "cell": [
+      96,
+      112
+    ],
+    "anchor": [
+      48,
+      104
+    ],
+    "scale": 0.1846,
+    "expected_frames": 5
+  },
+  "combo_3_v1": {
+    "source": "03_Combo_Hit_3_version_1.png",
+    "kind": "sprite",
+    "frames": 6,
+    "cell": [
+      272,
+      96
+    ],
+    "anchor": [
+      136,
+      88
+    ],
+    "scale": 0.2384,
+    "expected_frames": 7
+  },
+  "combo_3_v2": {
+    "source": "04_Combo_Hit_3_version_2.png",
+    "kind": "sprite",
+    "frames": 7,
+    "cell": [
+      160,
+      96
+    ],
+    "anchor": [
+      80,
+      88
+    ],
+    "scale": 0.1978,
+    "expected_frames": 7
+  },
+  "special_2": {
+    "source": "05_Low_Attack.png",
+    "kind": "sprite",
+    "frames": 8,
+    "cell": [
+      112,
+      96
+    ],
+    "anchor": [
+      56,
+      88
+    ],
+    "scale": 0.2517,
+    "expected_frames": 8
+  },
+  "air_attack": {
+    "source": "06_Jumping_Attack.png",
+    "kind": "sprite",
+    "frames": 4,
+    "cell": [
+      96,
+      96
+    ],
+    "anchor": [
+      48,
+      88
+    ],
+    "scale": 0.1254,
+    "expected_frames": 4
+  },
+  "special_1": {
+    "source": "07_Special_Move_1_Wave_of_Comoe.png",
+    "kind": "sprite",
+    "frames": 8,
+    "cell": [
+      144,
+      112
+    ],
+    "anchor": [
+      72,
+      104
+    ],
+    "scale": 0.2143,
+    "expected_frames": 8
+  },
+  "special_1_fx": {
+    "source": "08_Special_Move_1_Projectile.png",
+    "kind": "fx",
+    "frames": 4,
+    "cell": [
+      96,
+      96
+    ],
+    "anchor": [
+      48,
+      88
+    ],
+    "scale": 0.0727,
+    "expected_frames": 4
+  },
+  "intro": {
+    "source": "09_Intro_Victory.png",
+    "kind": "sprite",
+    "frames": 6,
+    "cell": [
+      96,
+      96
+    ],
+    "anchor": [
+      48,
+      88
+    ],
+    "scale": 0.24,
+    "expected_frames": 12
+  },
+  "victory": {
+    "source": "09_Intro_Victory.png",
+    "kind": "sprite",
+    "frames": 6,
+    "cell": [
+      96,
+      96
+    ],
+    "anchor": [
+      48,
+      88
+    ],
+    "scale": 0.2229,
+    "expected_frames": 12
+  },
+  "assist": {
+    "source": "19_Assist_Healing.png",
+    "kind": "sprite",
+    "frames": 6,
+    "cell": [
+      96,
+      96
+    ],
+    "anchor": [
+      48,
+      88
+    ],
+    "scale": 0.1351,
+    "expected_frames": 6
+  },
+  "ultimate_1a": {
+    "source": "10_Ultimate_Part_1_Image_A.png",
+    "kind": "scene",
+    "size": [
+      480,
+      270
+    ],
+    "scale": 0.2871
+  },
+  "ultimate_1b_v1": {
+    "source": "11_Ultimate_Part_1_Image_B_version_1.png",
+    "kind": "scene",
+    "size": [
+      480,
+      270
+    ],
+    "scale": 0.2871
+  },
+  "ultimate_1b_v2": {
+    "source": "12_Ultimate_Part_1_Image_B_version_2.png",
+    "kind": "scene",
+    "size": [
+      480,
+      270
+    ],
+    "scale": 0.2871
+  },
+  "ultimate_2_bg": {
+    "source": "13_Ultimate_Part_2_Layer_1_River.png",
+    "kind": "scene",
+    "size": [
+      480,
+      270
+    ],
+    "scale": 0.2871
+  },
+  "ultimate_2_tree": {
+    "source": "14_Ultimate_Part_2_Layer_2_Tree.png",
+    "kind": "layer",
+    "size": [
+      480,
+      267
+    ],
+    "scale": 0.2871
+  },
+  "ultimate_2_hippos": {
+    "source": "15_Ultimate_Part_2_Layer_3_Hippos.png",
+    "kind": "layer",
+    "size": [
+      480,
+      153
+    ],
+    "scale": 0.2222
+  },
+  "ultimate_3_people": {
+    "source": "16_Ultimate_Part_3_Layer_1_Crowd.png",
+    "kind": "layer",
+    "size": [
+      480,
+      160
+    ],
+    "scale": 0.221
+  },
+  "ultimate_3_wave": {
+    "source": "17_Ultimate_Part_3_Layer_2_Wave.png",
+    "kind": "layer",
+    "size": [
+      480,
+      164
+    ],
+    "scale": 0.2285
+  },
+  "ultimate_3_pokou": {
+    "source": "18_Ultimate_Part_3_Layer_3_Pokou.png",
+    "kind": "layer",
+    "size": [
+      229,
+      270
+    ],
+    "scale": 0.2452
+  }
+}

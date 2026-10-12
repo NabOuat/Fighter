@@ -10,7 +10,7 @@ The user is a beginner with Godot and works step by step: explain each change in
 - Scripts live next to their scene (`scenes/<feature>/<name>.tscn` + `.gd`). Files and folders in snake_case, `class_name` in PascalCase. Indent with tabs.
 - Never hardcode player-facing text: add a key to `localization/translations.csv` (columns `keys,fr,en`) and use the key or `tr()`.
 - Fighter stats and texts live in `FighterData` resources (`data/fighters/*.tres`), registered in `GameState.roster` (`autoload/game_state.gd`).
-- Design spec (cahier des charges, Claude Doc): https://claude.ai/code/artifact/8224c575-a78f-4241-b6f7-cf007d9a7319 — read it before designing features. Current phase: Phase 1, combat prototype with rectangles, built in 7 validated steps.
+- Design spec (cahier des charges, Claude Doc): https://claude.ai/code/artifact/8224c575-a78f-4241-b6f7-cf007d9a7319 — read it before designing features. Phase 1 (combat prototype with rectangles, 7 steps) is done. Current phase: Phase 2, first illustrated duel (Pokou). The user crops sprite poses manually; `tools/sprite_cutter.py` is an experimental auto-cutter kept for later.
 - Fighter (`scenes/fighters/fighter.gd`, `class_name Fighter`) is an enum state machine driven by an `intent` dictionary (filled by player input or, later, AI). It has no `_physics_process`: the arena (`scenes/fight/fight.gd`) calls `poll_input()` then `tick()` on each fighter every physics frame, separates them, then resolves hits by intersecting `get_hitbox_rect()` / `get_hurtbox_rect()` (plain Rect2, no Area2D). Hitstop freezes ticks but not input polling.
 - Health is the same for everyone (`Fighter.MAX_HEALTH = 1000`). Stats in `FighterData` are 1-5 (power, defense, speed) + reach. Attacks are `AttackData` resources (frames, damage, hitstun, pushback, knockdown, hitstop, hitbox Rect2 from the feet facing right): a `combo` array, `low_attack`, `air_attack`.
 - Generate or restructure `.tres` files with a headless Godot script using `ResourceSaver.save` rather than hand-writing typed arrays.
@@ -23,6 +23,8 @@ The user is a beginner with Godot and works step by step: explain each change in
 - Historical accuracy matters: check facts (dates, kingdoms) before writing bios.
 
 ## Checking work
+- Automated tests: `python tools/run_tests.py` (or `python tools/run_tests.py combat`) runs every `tests/test_*.gd` headless; each prints OK/ÉCHEC lines and exits non-zero on failure. Run them after every gameplay change and add checks for new behaviour (extend `tests/test_base.gd`). `tests/tournament_ai.gd` is the long AI balance tournament.
+- Android export: preset "Android" in `export_presets.cfg` (excludes tests/, tools/, docs/, raw images). Java = Android Studio's jbr, SDK in %LOCALAPPDATA%/Android/Sdk; export templates must be installed from the editor.
 Godot is at `C:/Users/OUATTARA AFOR/Downloads/Godot_v4.7.2-stable_win64.exe/Godot_v4.7.2-stable_win64_console.exe`.
 - Import after adding files: `--headless --path . --import`
 - Run and catch script errors: `--headless --path . --quit-after 120`

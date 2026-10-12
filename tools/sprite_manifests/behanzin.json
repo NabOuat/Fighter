@@ -1,0 +1,69 @@
+{
+  "01_Combo_Hit_1.png": {
+    "name": "combo_1",
+    "frames": 5
+  },
+  "02_Combo_Hit_2.png": {
+    "name": "combo_2",
+    "frames": 5
+  },
+  "03_Combo_Hit_3.png": {
+    "name": "combo_3",
+    "frames": 7
+  },
+  "04_Low_Attack_Original.png": {
+    "name": "low_attack_v1",
+    "frames": 5
+  },
+  "05_Low_Attack_Deux_Rangees.png": {
+    "name": "low_attack_v2"
+  },
+  "06_Jumping_Attack.png": {
+    "name": "air_attack",
+    "frames": 4
+  },
+  "07_Special_1_Shark_Bite.png": {
+    "name": "special_1",
+    "frames": 8
+  },
+  "08_Special_1_Projectile.png": {
+    "name": "special_1_fx",
+    "frames": 4,
+    "kind": "fx",
+    "height": 24
+  },
+  "09_Special_2_Royal_Charge.png": {
+    "name": "special_2",
+    "frames": 8
+  },
+  "15_Assist_Ground_Attack.png": {
+    "name": "assist",
+    "frames": 6
+  },
+  "16_Intro_Victory.png": {
+    "names": [
+      "intro",
+      "victory"
+    ]
+  },
+  "10_Ultimate_Part1_Image_A.png": {
+    "name": "ultimate_1a",
+    "kind": "scene"
+  },
+  "11_Ultimate_Part1_Image_B.png": {
+    "name": "ultimate_1b",
+    "kind": "scene"
+  },
+  "12_Ultimate_Part2_Layer1.png": {
+    "name": "ultimate_2_bg",
+    "kind": "scene"
+  },
+  "13_Ultimate_Part2_Layer2.png": {
+    "name": "ultimate_2_shark",
+    "kind": "layer"
+  },
+  "14_Ultimate_Part3_Layer2.png": {
+    "name": "ultimate_3_impact",
+    "kind": "scene"
+  }
+}

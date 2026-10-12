@@ -1,3 +1,9 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+
+# Images brutes générées (trop lourdes pour Git, gardées dans les archives)
+assets/characters/*/raw/
+
+# Fichiers exportés (APK)
+/build/
