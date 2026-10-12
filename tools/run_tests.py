@@ -33,12 +33,22 @@ def decode(raw: bytes) -> str:
     return raw.decode("utf-8", errors="replace")
 
 
+# Un test qui ne se termine pas (script qui ne compile pas, boucle sans fin) est
+# arrêté au bout de ce temps et compté comme un échec.
+TIMEOUT_SECONDS = 180
+
+
 def run(test: Path) -> bool:
     started = time.time()
-    result = subprocess.run(
-        [GODOT, "--headless", "--fixed-fps", "60", "--path", str(ROOT), "--script", f"res://tests/{test.name}"],
-        capture_output=True,
-    )
+    try:
+        result = subprocess.run(
+            [GODOT, "--headless", "--fixed-fps", "60", "--path", str(ROOT), "--script", f"res://tests/{test.name}"],
+            capture_output=True, timeout=TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as stuck:
+        print(f"\n=== {test.stem} : BLOQUÉ (arrêté après {TIMEOUT_SECONDS} s)")
+        print(decode(stuck.stdout or b"")[-3000:])
+        return False
     lines = [line for line in (decode(result.stdout) + decode(result.stderr)).splitlines()
              if line.strip() and not any(noise in line for noise in NOISE)]
     print(f"\n=== {test.stem} ({time.time() - started:.0f} s)")

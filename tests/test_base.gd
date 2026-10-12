@@ -14,8 +14,22 @@ var checks := 0
 var failures := 0
 
 
+## Les réglages des tests : jamais ceux du joueur (ni lus, ni écrits).
+const TEST_SETTINGS_PATH := "user://test_settings.cfg"
+
+
+## GameState (autoload) finit de démarrer à la première frame ; ensuite on lui
+## donne des réglages neutres, dans un fichier à part.
+func use_test_settings() -> Node:
+	await process_frame
+	var gs: Node = root.get_node("GameState")
+	gs.reset_settings(TEST_SETTINGS_PATH)
+	return gs
+
+
 ## Crée l'arène, en mode entraînement (pas de chrono, personne n'est mis K.O.).
 func start_arena(training := true) -> void:
+	await use_test_settings()
 	fight = load(FIGHT_SCENE).instantiate()
 	root.add_child(fight)
 	await process_frame
@@ -25,7 +39,7 @@ func start_arena(training := true) -> void:
 	fight.tools.dummy_mode = fight.tools.DummyMode.STAND
 	if training:
 		fight.training = true
-		fight._reset_training()
+		fight.reset_training()
 	await physics_frame
 
 
@@ -45,7 +59,7 @@ func run(n: int, hold := {}, taps := {}) -> void:
 ## au moment exact où commence la situation testée.
 func setup(player_x: float, dummy_x: float, mode: int, energy := 400.0, support := 0) -> void:
 	fight.tools.dummy_mode = fight.tools.DummyMode.STAND
-	fight._reset_training()
+	fight.reset_training()
 	fight.tools.support_index = support
 	p.support = fight.tools.TEST_SUPPORTS[support]
 	await run(1)

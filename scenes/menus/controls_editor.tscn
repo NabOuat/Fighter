@@ -1,0 +1,146 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/menus/controls_editor.gd" id="1_editor"]
+[ext_resource type="PackedScene" path="res://scenes/ui/touch_controls.tscn" id="2_controls"]
+
+[node name="ControlsEditor" type="CanvasLayer"]
+layer = 20
+script = ExtResource("1_editor")
+
+[node name="Background" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.11, 0.063, 0.039, 0.92)
+
+[node name="Floor" type="ColorRect" parent="Background"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -40.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+color = Color(0.2, 0.13, 0.08, 1)
+
+[node name="Controls" parent="." instance=ExtResource("2_controls")]
+layer = 21
+
+[node name="Overlay" type="CanvasLayer" parent="."]
+layer = 22
+
+[node name="Highlight" type="Node2D" parent="Overlay"]
+unique_name_in_owner = true
+
+[node name="Toolbar" type="PanelContainer" parent="Overlay"]
+unique_name_in_owner = true
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -135.0
+offset_top = -62.0
+offset_right = 135.0
+offset_bottom = 30.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Box" type="VBoxContainer" parent="Overlay/Toolbar"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Title" type="Label" parent="Overlay/Toolbar/Box"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.902, 0.678, 0.235, 1)
+theme_override_font_sizes/font_size = 11
+text = "CONTROLS_TITLE"
+horizontal_alignment = 1
+
+[node name="SelectedLabel" type="Label" parent="Overlay/Toolbar/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 8
+text = "CONTROLS_HINT"
+horizontal_alignment = 1
+
+[node name="SizeRow" type="HBoxContainer" parent="Overlay/Toolbar/Box"]
+layout_mode = 2
+
+[node name="SizeLabel" type="Label" parent="Overlay/Toolbar/Box/SizeRow"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 8
+text = "CONTROLS_SIZE"
+
+[node name="SizeSlider" type="HSlider" parent="Overlay/Toolbar/Box/SizeRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+min_value = 0.6
+max_value = 1.6
+step = 0.05
+value = 1.0
+
+[node name="OpacityRow" type="HBoxContainer" parent="Overlay/Toolbar/Box"]
+layout_mode = 2
+
+[node name="OpacityLabel" type="Label" parent="Overlay/Toolbar/Box/OpacityRow"]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 8
+text = "CONTROLS_OPACITY"
+
+[node name="OpacitySlider" type="HSlider" parent="Overlay/Toolbar/Box/OpacityRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+min_value = 0.2
+max_value = 1.0
+step = 0.05
+value = 0.8
+
+[node name="Buttons" type="HBoxContainer" parent="Overlay/Toolbar/Box"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="RightHandedButton" type="Button" parent="Overlay/Toolbar/Box/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 8
+text = "CONTROLS_RIGHT_HANDED"
+
+[node name="LeftHandedButton" type="Button" parent="Overlay/Toolbar/Box/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 8
+text = "CONTROLS_LEFT_HANDED"
+
+[node name="CancelButton" type="Button" parent="Overlay/Toolbar/Box/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 8
+text = "MENU_CANCEL"
+
+[node name="SaveButton" type="Button" parent="Overlay/Toolbar/Box/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 8
+text = "MENU_SAVE"

@@ -35,7 +35,7 @@ func _initialize() -> void:
 	await start_arena()
 	# Ici le joueur doit lire les vraies commandes (les faux doigts), pas le test.
 	p.is_player = true
-	var controls: TouchControls = fight.get_node("TouchControls")
+	var controls = fight.get_node("TouchControls")
 	check("contrôles affichés et reliés au joueur", controls.visible and controls.fighter == p)
 
 	section("Joystick")

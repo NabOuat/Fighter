@@ -46,6 +46,8 @@ enum Reach { MELEE, LONG_WEAPON, RANGED }
 @export var low_attack: AttackData
 ## Attaque en l'air.
 @export var air_attack: AttackData
+## Projection : collé à l'adversaire, avant + Garde. Elle traverse la garde.
+@export var throw: AttackData
 
 @export_group("Coups spéciaux")
 ## Spécial 1 : bouton Spécial seul (1 segment d'énergie).

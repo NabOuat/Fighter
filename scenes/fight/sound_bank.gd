@@ -32,6 +32,8 @@ func _ready() -> void:
 			push_warning("Son introuvable : " + path)
 	for i in VOICES:
 		var player := AudioStreamPlayer.new()
+		# Bus « SFX » : son volume se règle dans les Réglages.
+		player.bus = &"SFX"
 		add_child(player)
 		_players.append(player)
 

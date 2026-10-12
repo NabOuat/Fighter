@@ -33,6 +33,8 @@ func _initialize() -> void:
 	await setup(280, 305, M.GUARD_HIGH)
 	await run(60, {}, {"attack": [0, 6, 12]})
 	check("garde haute : le combo est paré", d.health == 1000, "vie %d" % d.health)
+	# Le 3e coup du combo repousse loin : on se rapproche.
+	await setup(280, 305, M.GUARD_HIGH)
 	await run(40, {"crouch": true}, {"attack": [0]})
 	check("garde haute : le coup bas passe", d.health < 1000, "vie %d" % d.health)
 
@@ -140,5 +142,16 @@ func _initialize() -> void:
 		await run(1, {}, {"guard_pressed": [0]} if near and not parried else {})
 		parried = parried or (fight.hud.popup_label.visible and fight.hud.popup_label.text == "FIGHT_PARRY")
 	check("contrer un projectile n'étourdit pas le lanceur", parried and d.state != Fighter.State.HITSTUN and p.health == 1000, "%s, vie %d" % [state_name(d), p.health])
+
+	# On tape vite et à des rythmes différents : aucun appui ne doit être perdu.
+	var all_three := true
+	for gap in [4, 6, 9]:
+		await setup(285, 310, M.STAND)
+		var best := 0
+		for i in 50:
+			await run(1, {}, {"attack": [0]} if i in [0, gap, gap * 2] else {})
+			best = maxi(best, p.combo_hits)
+		all_three = all_three and best == 3
+	check("taper vite Attaque 3 fois fait toujours le combo de 3 coups", all_three)
 
 	finish()

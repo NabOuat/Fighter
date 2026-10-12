@@ -1,0 +1,189 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/menus/settings_menu.gd" id="1_settings"]
+
+[node name="SettingsMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_settings")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.04, 0.02, 0.01, 0.8)
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -140.0
+offset_top = -122.0
+offset_right = 140.0
+offset_bottom = 122.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Box" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Title" type="Label" parent="Panel/Box"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.902, 0.678, 0.235, 1)
+theme_override_font_sizes/font_size = 14
+text = "MENU_SETTINGS"
+horizontal_alignment = 1
+
+[node name="Tabs" type="TabContainer" parent="Panel/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 9
+current_tab = 0
+
+[node name="General" type="GridContainer" parent="Panel/Box/Tabs"]
+layout_mode = 2
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 5
+columns = 2
+metadata/_tab_index = 0
+
+[node name="LanguageLabel" type="Label" parent="Panel/Box/Tabs/General"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+text = "SETTINGS_LANGUAGE"
+
+[node name="LanguageButton" type="Button" parent="Panel/Box/Tabs/General"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "SETTINGS_LANGUAGE_NAME"
+
+[node name="MusicLabel" type="Label" parent="Panel/Box/Tabs/General"]
+layout_mode = 2
+text = "SETTINGS_MUSIC"
+
+[node name="MusicSlider" type="HSlider" parent="Panel/Box/Tabs/General"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.05
+value = 0.8
+
+[node name="SfxLabel" type="Label" parent="Panel/Box/Tabs/General"]
+layout_mode = 2
+text = "SETTINGS_SFX"
+
+[node name="SfxSlider" type="HSlider" parent="Panel/Box/Tabs/General"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.05
+value = 0.8
+
+[node name="VibrationLabel" type="Label" parent="Panel/Box/Tabs/General"]
+layout_mode = 2
+text = "SETTINGS_VIBRATION"
+
+[node name="VibrationCheck" type="CheckButton" parent="Panel/Box/Tabs/General"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+button_pressed = true
+
+[node name="MarkersLabel" type="Label" parent="Panel/Box/Tabs/General"]
+layout_mode = 2
+text = "SETTINGS_MARKERS"
+
+[node name="MarkersCheck" type="CheckButton" parent="Panel/Box/Tabs/General"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+button_pressed = true
+
+[node name="Controls" type="VBoxContainer" parent="Panel/Box/Tabs"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 3
+metadata/_tab_index = 1
+
+[node name="ControlModeValue" type="Label" parent="Panel/Box/Tabs/Controls"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.431, 0.361, 0.29, 1)
+theme_override_font_sizes/font_size = 8
+text = "SETTINGS_CONTROL_SIMPLE"
+
+[node name="ExtrasLabel" type="Label" parent="Panel/Box/Tabs/Controls"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.722, 0.4, 0.122, 1)
+theme_override_font_sizes/font_size = 9
+text = "SETTINGS_EXTRA_BUTTONS"
+
+[node name="Extras" type="GridContainer" parent="Panel/Box/Tabs/Controls"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 2
+columns = 2
+
+[node name="Throw" type="CheckButton" parent="Panel/Box/Tabs/Controls/Extras"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 8
+text = "SETTINGS_EXTRA_THROW"
+
+[node name="Special2" type="CheckButton" parent="Panel/Box/Tabs/Controls/Extras"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 8
+text = "SETTINGS_EXTRA_SPECIAL2"
+
+[node name="LowAttack" type="CheckButton" parent="Panel/Box/Tabs/Controls/Extras"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 8
+text = "SETTINGS_EXTRA_LOW"
+
+[node name="Charge" type="CheckButton" parent="Panel/Box/Tabs/Controls/Extras"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 8
+text = "SETTINGS_EXTRA_CHARGE"
+
+[node name="ExtrasHint" type="Label" parent="Panel/Box/Tabs/Controls"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.431, 0.361, 0.29, 1)
+theme_override_font_sizes/font_size = 7
+text = "SETTINGS_EXTRA_HINT"
+autowrap_mode = 3
+
+[node name="LayoutButton" type="Button" parent="Panel/Box/Tabs/Controls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+text = "SETTINGS_LAYOUT"
+
+[node name="CloseButton" type="Button" parent="Panel/Box"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 22)
+layout_mode = 2
+text = "MENU_CLOSE"

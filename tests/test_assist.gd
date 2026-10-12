@@ -100,7 +100,7 @@ func _initialize() -> void:
 	fight.tools.frame_count = 79
 	await run(3)
 	check("le mannequin appelle son soutien", fight.assists.size() >= 1)
-	fight._reset_training()
+	fight.reset_training()
 	await run(1)
 	check("la remise en place retire les soutiens", fight.assists.is_empty() and not d.assist_active)
 

@@ -9,36 +9,36 @@ func _initialize() -> void:
 	section("Sons")
 	var missing := []
 	for sound in SoundBank.SOUNDS:
-		if not fight.sounds._streams.has(sound):
+		if not fight.feedback.sounds._streams.has(sound):
 			missing.append(sound)
 	check("les 12 sons sont chargés", missing.is_empty(), "manquants : %s" % str(missing))
 
 	section("Effets d'impact")
 	await setup(280, 305, M.STAND)
-	var before: int = fight.effects.spawned
+	var before: int = fight.feedback.effects.spawned
 	await run(4, {}, {"attack": [0]})
 	await run(10)
-	check("un coup qui touche fait des étincelles", fight.effects.spawned > before)
+	check("un coup qui touche fait des étincelles", fight.feedback.effects.spawned > before)
 
 	await setup(287, 310, M.STAND)
 	var shook := false
 	for i in 60:
 		await run(1, {}, {"attack": [0]} if i % 6 == 0 else {})
-		shook = shook or fight.camera.offset != Vector2.ZERO
+		shook = shook or fight.feedback.camera.offset != Vector2.ZERO
 	check("le 3e coup du combo (lourd) fait trembler l'écran", shook)
 	await run(30)
-	check("l'écran revient en place", fight.camera.offset == Vector2.ZERO)
+	check("l'écran revient en place", fight.feedback.camera.offset == Vector2.ZERO)
 
 	await setup(280, 305, M.GUARD_HIGH)
-	before = fight.effects.spawned
+	before = fight.feedback.effects.spawned
 	await run(30, {}, {"attack": [0]})
-	check("un coup paré fait des étincelles bleues", fight.effects.spawned > before)
+	check("un coup paré fait des étincelles bleues", fight.feedback.effects.spawned > before)
 
 	await setup(280, 305, M.ATTACK)
 	fight.tools.frame_count = 79
-	before = fight.effects.spawned
+	before = fight.feedback.effects.spawned
 	await run(30, {}, {"guard_pressed": [4]})
-	check("un contre parfait fait son effet", fight.effects.spawned > before)
+	check("un contre parfait fait son effet", fight.feedback.effects.spawned > before)
 
 	section("Menu pause")
 	var x_before := d.position.x
@@ -58,6 +58,6 @@ func _initialize() -> void:
 	fight.pause_menu.set_paused(true)
 	fight.pause_menu.restart_button.pressed.emit()
 	await run(2)
-	check("le menu relance le combat", fight.phase == fight.Phase.INTRO and not paused)
+	check("le menu relance le combat", fight.flow.phase == fight.flow.Phase.INTRO and not paused)
 
 	finish()

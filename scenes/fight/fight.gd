@@ -1,5 +1,5 @@
 extends Node2D
-## L'arène : elle fait avancer le combat image par image et gère les manches.
+## L'arène : elle fait avancer le combat image par image.
 ##
 ## À chaque frame (60 par seconde), dans cet ordre :
 ##   1. chaque combattant lit ses commandes (bloquées pendant les annonces) ;
@@ -10,31 +10,26 @@ extends Node2D
 ## c'est ce qui donne la sensation d'impact. L'ultime fige tout plus longtemps
 ## pour sa mise en scène.
 ##
-## Deux modes (touche M pour passer de l'un à l'autre) :
-## - Combat : 2 manches gagnantes, chrono de 60 secondes, K.O. et temps écoulé.
-## - Entraînement : pas de chrono, personne ne peut être mis K.O., énergie pleine.
+## Les autres rôles sont dans des nœuds à part :
+## - MatchFlow (match_flow.gd) : manches, chrono, K.O., annonces ;
+## - Feedback (fight_feedback.gd) : étincelles, sons, tremblement, vibration ;
+## - HUD (scenes/ui/fight_hud) : tout l'affichage ;
+## - MatchLog (match_log.gd) : journal des combats d'Arcade (pour régler l'IA) ;
+## - TrainingTools : mannequin, IA de l'adversaire, outils de test.
 ##
-## L'affichage est dans la scène HUD (scenes/ui/fight_hud), les outils de test
-## (mannequin, touches 0 à 8, Y, T) dans TrainingTools.
-##
-## Lance cette scène seule avec F6 pour tester.
+## Deux façons de jouer : combat (2 manches gagnantes, 60 secondes) ou
+## entraînement (pas de chrono, personne n'est mis K.O., énergie pleine).
+## Les combattants, soutiens et la difficulté viennent des menus (GameState).
+## Lancée seule avec F6, l'arène prend les combattants de test (touche M :
+## combat / entraînement, R : recommencer).
 
-## Les étapes d'un combat.
-enum Phase { INTRO, FIGHT, ROUND_OVER, MATCH_OVER }
+## Émis après chaque coup qui atteint sa cible (sert au tutoriel).
+signal hit_landed(result: Fighter.HitResult, attack: AttackData, attacker: Fighter, defender: Fighter)
 
-## Manches à gagner pour remporter le combat.
-const ROUNDS_TO_WIN := 2
-## Durée d'une manche : 60 secondes.
-const ROUND_FRAMES := 60 * 60
-## Annonce de début de manche : « Round 1 » puis « Combat ! ».
-const INTRO_ROUND_FRAMES := 70
-const INTRO_TOTAL_FRAMES := 110
+const TUTORIAL_SCENE := preload("res://scenes/fight/tutorial.tscn")
+
 ## Après un K.O., le combat passe au ralenti un moment.
 const KO_SLOWMO_FRAMES := 60
-## Fin de manche : « K.O. » d'abord, puis le nom du gagnant, puis la manche suivante.
-const RESULT_SHOW_FRAMES := 90
-const ROUND_OVER_FRAMES := 210
-
 ## Largeur minimale entre les centres des deux combattants.
 const PUSHBOX_WIDTH := 20.0
 ## Limites de l'arène pour le centre des combattants.
@@ -47,14 +42,6 @@ const FLOOR_Y := 230.0
 ## Durée de l'arrêt du combat au début de l'ultime.
 const ULTIMATE_FREEZE_FRAMES := 45
 
-## Tremblement de l'écran sur les gros coups : force (pixels) et durée (frames).
-const SHAKE_HEAVY := 3.0
-const SHAKE_HEAVY_FRAMES := 8
-const SHAKE_KO := 5.0
-const SHAKE_KO_FRAMES := 20
-## Un coup est « lourd » (gros bruit, grosses étincelles) à partir de ces dégâts.
-const HEAVY_DAMAGE := 60
-
 ## Énergie gagnée selon ce qui arrive (sur 400 pour la barre pleine).
 const ENERGY_ON_HIT := 20.0
 const ENERGY_WHEN_HIT := 12.0
@@ -63,64 +50,101 @@ const ENERGY_WHEN_BLOCKING := 5.0
 const ENERGY_ON_PARRY := 25.0
 
 var training := false
-var phase: Phase = Phase.INTRO
-## Frames écoulées depuis le début de l'étape en cours.
-var phase_frames := 0
-var round_number := 1
-var player_wins := 0
-var dummy_wins := 0
-var timer_frames := ROUND_FRAMES
 var slowmo_frames := 0
-## Texte (clé de traduction) annonçant le résultat de la manche.
-var round_result_key := ""
-## Gagnant(s) de la dernière manche (les deux en cas d'égalité).
-var round_winners: Array[Fighter] = []
-
 var hitstop := 0
 var ultimate_freeze := 0
 var frame_count := 0
 var projectiles: Array[Projectile] = []
 var assists: Array[Assist] = []
-var shake_frames := 0
-var shake_strength := 0.0
-var _shake_rng := RandomNumberGenerator.new()
 
 @onready var player: Fighter = $Player
 @onready var dummy: Fighter = $Dummy
 @onready var fighters: Array[Fighter] = [player, dummy]
+@onready var flow: MatchFlow = $MatchFlow
+@onready var feedback: FightFeedback = $Feedback
+@onready var match_log: MatchLog = $MatchLog
 @onready var hud: FightHUD = $HUD
 @onready var tools: TrainingTools = $TrainingTools
 @onready var dim: ColorRect = $Dim
 @onready var touch_controls: TouchControls = $TouchControls
-@onready var camera: Camera2D = $Camera
-@onready var effects: HitEffects = $HitEffects
-@onready var sounds: SoundBank = $Sounds
 @onready var pause_menu: PauseMenu = $PauseMenu
+@onready var match_result: MatchResult = $MatchResult
 
 
 func _ready() -> void:
 	player.opponent = dummy
 	dummy.opponent = player
-	hud.show_names(player, dummy)
+	feedback.setup($HitEffects, $Sounds, $Camera, hud, player)
+	flow.setup(player, dummy)
+	flow.round_started.connect(_on_round_started)
+	flow.round_ended.connect(_on_round_ended)
+	flow.match_over.connect(_on_match_over)
+	match_log.setup(player, dummy)
+	hit_landed.connect(match_log.on_hit)
 	for fighter in fighters:
-		fighter.dodged.connect(hud.show_popup.bind("FIGHT_DODGE"))
+		fighter.dodged.connect(feedback.dodged)
 		fighter.projectile_launched.connect(_on_projectile_launched)
 		fighter.ultimate_started.connect(_on_ultimate_started)
 		fighter.assist_called.connect(_on_assist_called)
-		fighter.attack_started.connect(_on_attack_started)
-		fighter.dodged.connect(sounds.play.bind("dodge"))
+		fighter.attack_started.connect(feedback.attack_started)
 	pause_menu.restart_requested.connect(restart)
 	pause_menu.mode_toggled.connect(toggle_training)
-	# Pas encore de menu de sélection : les outils de test donnent les soutiens.
+	pause_menu.menu_requested.connect(GameState.go_to.bind(GameState.MAIN_MENU))
+	pause_menu.can_toggle_mode = GameState.mode == GameState.Mode.QUICK
+	match_result.next_requested.connect(_next_arcade_fight)
+	match_result.retry_requested.connect(start_match)
+	match_result.menu_requested.connect(GameState.go_to.bind(GameState.MAIN_MENU))
 	tools.setup(player, dummy)
+	_setup_from_menus()
 	touch_controls.fighter = player
-	_start_match()
+	_apply_control_settings()
+	# Les réglages peuvent changer en pleine pause.
+	GameState.settings_saved.connect(_apply_control_settings)
+	if GameState.mode in [GameState.Mode.TRAINING, GameState.Mode.TUTORIAL]:
+		training = true
+		reset_training()
+	else:
+		start_match()
+	if GameState.mode == GameState.Mode.TUTORIAL:
+		var tutorial: Tutorial = TUTORIAL_SCENE.instantiate()
+		add_child(tutorial)
+		tutorial.start(self)
+
+
+## Les combattants, soutiens et la difficulté choisis dans les menus.
+## (Lancée seule avec F6, l'arène garde les combattants de test.)
+func _setup_from_menus() -> void:
+	var arcade := GameState.mode == GameState.Mode.ARCADE
+	match GameState.mode:
+		GameState.Mode.ARCADE:
+			var entry: Dictionary = GameState.arcade_opponents[GameState.arcade_index]
+			player.data = GameState.player_fighter
+			player.support = GameState.player_support
+			dummy.data = entry.fighter
+			dummy.support = entry.support
+		GameState.Mode.TUTORIAL:
+			player.data = GameState.roster[0]
+			dummy.data = GameState.roster[1]
+		GameState.Mode.TRAINING:
+			player.data = GameState.player_fighter
+			player.support = GameState.player_support
+			dummy.data = GameState.opponent_fighter
+	if GameState.mode in [GameState.Mode.ARCADE, GameState.Mode.TRAINING]:
+		tools.ai = FighterAI.new(GameState.difficulty)
+		tools.dummy_mode = TrainingTools.DummyMode.AI
+	# En Arcade et dans le tutoriel, pas d'outils de test (touches du mannequin,
+	# texte de débogage, zones de frappe).
+	var clean := arcade or GameState.mode == GameState.Mode.TUTORIAL
+	tools.set_process_unhandled_input(not clean)
+	tools.debug_label.visible = not clean
+	for fighter in fighters:
+		fighter.show_boxes = not clean
+	hud.show_names(player, dummy)
 
 
 func _physics_process(delta: float) -> void:
 	frame_count += 1
-	phase_frames += 1
-	if training or phase == Phase.FIGHT:
+	if training or flow.is_fighting():
 		tools.drive_dummy(projectiles)
 		for fighter in fighters:
 			fighter.poll_input()
@@ -140,8 +164,11 @@ func _physics_process(delta: float) -> void:
 		_simulate(delta)
 
 	if not training:
-		_update_match()
-	_update_shake()
+		flow.update()
+		if flow.phase == MatchFlow.Phase.MATCH_OVER and GameState.mode == GameState.Mode.QUICK \
+				and Input.is_action_just_pressed("attack"):
+			start_match()
+	feedback.update()
 	_update_hud()
 
 
@@ -155,19 +182,23 @@ func _simulate(delta: float) -> void:
 	for projectile in projectiles:
 		projectile.tick(delta)
 	_separate_fighters()
-	if training or phase == Phase.FIGHT:
+	if training or flow.is_fighting():
 		_resolve_hits()
 		_resolve_assists()
 		_resolve_projectiles()
 		_end_finished_combos()
 		if not training:
-			timer_frames = maxi(0, timer_frames - 1)
+			flow.tick_timer()
+			match_log.tick()
 	else:
 		_remove_finished_assists()
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
+		return
+	# Raccourcis de test, seulement quand l'arène est lancée seule (F6).
+	if GameState.mode != GameState.Mode.QUICK:
 		return
 	match event.physical_keycode:
 		KEY_R:
@@ -176,14 +207,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			toggle_training()
 
 
-# --- Déroulement du combat ---------------------------------------------------
+# --- Combat, entraînement, Arcade --------------------------------------------
 
 ## Recommence : le combat entier, ou la mise en place de l'entraînement.
 func restart() -> void:
 	if training:
-		_reset_training()
+		reset_training()
 	else:
-		_start_match()
+		start_match()
 
 
 ## Passe du mode combat au mode entraînement, et inversement.
@@ -192,126 +223,81 @@ func toggle_training() -> void:
 	restart()
 
 
-func _start_match() -> void:
+func start_match() -> void:
 	training = false
-	player_wins = 0
-	dummy_wins = 0
-	round_number = 1
+	match_result.hide_result()
+	match_log.reset()
 	for fighter in fighters:
 		fighter.immortal = false
-		fighter.energy = 0.0
-	_start_round()
+	flow.start_match()
 
 
-## Nouvelle manche : vie pleine, positions de départ. L'énergie est gardée.
-func _start_round() -> void:
-	_clear_effects()
-	for fighter in fighters:
-		fighter.reset()
-	player.position = Vector2(START_X_PLAYER, FLOOR_Y)
-	dummy.position = Vector2(START_X_DUMMY, FLOOR_Y)
-	timer_frames = ROUND_FRAMES
-	_set_phase(Phase.INTRO)
-	sounds.play("gong")
+## Nouvelle manche : tout repart à zéro (vie pleine, énergie vide, soutien prêt).
+func _on_round_started() -> void:
+	_reset_fighters(0.0)
+	feedback.round_started()
+
+
+func _on_round_ended(by_ko: bool) -> void:
+	if by_ko:
+		slowmo_frames = KO_SLOWMO_FRAMES
+	feedback.round_ended(by_ko)
 
 
 ## En entraînement : pas de chrono, personne ne peut être mis K.O., énergie pleine.
-func _reset_training() -> void:
+func reset_training() -> void:
+	_reset_fighters(Fighter.MAX_ENERGY)
+	for fighter in fighters:
+		fighter.immortal = true
+	flow.set_phase(MatchFlow.Phase.FIGHT)
+
+
+func _reset_fighters(energy: float) -> void:
 	_clear_effects()
 	for fighter in fighters:
 		fighter.reset()
-		fighter.immortal = true
-		fighter.energy = Fighter.MAX_ENERGY
+		fighter.energy = energy
 	player.position = Vector2(START_X_PLAYER, FLOOR_Y)
 	dummy.position = Vector2(START_X_DUMMY, FLOOR_Y)
-	_set_phase(Phase.FIGHT)
 
 
-func _set_phase(new_phase: Phase) -> void:
-	phase = new_phase
-	phase_frames = 0
+## Fin du combat. En Arcade : le journal, puis la fenêtre de résultat.
+func _on_match_over() -> void:
+	if GameState.mode != GameState.Mode.ARCADE:
+		return
+	var result := "win" if flow.player_won() else ("loss" if flow.dummy_wins >= MatchFlow.ROUNDS_TO_WIN and flow.player_wins < MatchFlow.ROUNDS_TO_WIN else "draw")
+	# Pendant les tests automatiques, on n'écrit pas dans le vrai journal.
+	if not GameState.dry_run:
+		match_log.write(FighterAI.Difficulty.keys()[GameState.difficulty], result, "%d-%d" % [flow.player_wins, flow.dummy_wins])
+	_show_arcade_result()
 
 
-func _update_match() -> void:
-	match phase:
-		Phase.INTRO:
-			if phase_frames >= INTRO_TOTAL_FRAMES:
-				_set_phase(Phase.FIGHT)
-		Phase.FIGHT:
-			if player.health <= 0 or dummy.health <= 0:
-				_end_round(true)
-			elif timer_frames <= 0:
-				_end_round(false)
-		Phase.ROUND_OVER:
-			if phase_frames >= ROUND_OVER_FRAMES:
-				if player_wins >= ROUNDS_TO_WIN or dummy_wins >= ROUNDS_TO_WIN:
-					_set_phase(Phase.MATCH_OVER)
-				else:
-					round_number += 1
-					_start_round()
-		Phase.MATCH_OVER:
-			if Input.is_action_just_pressed("attack"):
-				_start_match()
-
-
-## Fin de manche, par K.O. ou au chrono. En cas d'égalité, les deux gagnent la manche.
-func _end_round(by_ko: bool) -> void:
-	round_winners.clear()
-	if by_ko:
-		for fighter in fighters:
-			if fighter.health > 0:
-				round_winners.append(fighter)
-		round_result_key = "FIGHT_KO" if round_winners.size() == 1 else "FIGHT_DOUBLE_KO"
-		slowmo_frames = KO_SLOWMO_FRAMES
-		sounds.play("ko")
-		_shake(SHAKE_KO, SHAKE_KO_FRAMES)
+## Arcade : victoire (le joueur seul à 2 manches), défaite ou série terminée.
+func _show_arcade_result() -> void:
+	var number := GameState.arcade_index + 1
+	var count := GameState.arcade_opponents.size()
+	var won := flow.player_won()
+	if won and number == count:
+		match_result.show_result(MatchResult.Outcome.COMPLETE, number, count)
 	else:
-		if player.health > dummy.health:
-			round_winners.append(player)
-		elif dummy.health > player.health:
-			round_winners.append(dummy)
-		round_result_key = "FIGHT_TIME_UP"
-		sounds.play("gong")
-	# Double K.O. ou vie égale au chrono : la manche compte pour les deux.
-	if round_winners.is_empty():
-		round_winners.append_array(fighters)
-	for fighter in round_winners:
-		if fighter == player:
-			player_wins += 1
-		else:
-			dummy_wins += 1
-	_set_phase(Phase.ROUND_OVER)
+		match_result.show_result(MatchResult.Outcome.WIN if won else MatchResult.Outcome.LOSS, number, count)
 
 
-## Texte de la grande annonce au centre de l'écran (vide = rien à annoncer).
-func _announce_text() -> String:
-	match phase:
-		Phase.INTRO:
-			if phase_frames < INTRO_ROUND_FRAMES:
-				var last := player_wins == ROUNDS_TO_WIN - 1 and dummy_wins == ROUNDS_TO_WIN - 1
-				return tr("FIGHT_FINAL_ROUND") if last else tr("FIGHT_ROUND") % round_number
-			return tr("FIGHT_START")
-		Phase.ROUND_OVER:
-			if phase_frames < RESULT_SHOW_FRAMES:
-				return tr(round_result_key)
-			return _winner_text(round_winners, "FIGHT_ROUND_WINNER")
-		Phase.MATCH_OVER:
-			var champions: Array[Fighter] = []
-			if player_wins >= ROUNDS_TO_WIN:
-				champions.append(player)
-			if dummy_wins >= ROUNDS_TO_WIN:
-				champions.append(dummy)
-			return _winner_text(champions, "FIGHT_MATCH_WINNER") + "\n" + tr("FIGHT_PRESS_RESTART")
-	return ""
+## Avec un bouton Charge, le bouton Spécial du joueur part dès l'appui.
+func _apply_control_settings() -> void:
+	player.special_hold_charges = GameState.special_hold_charges()
+	for fighter in fighters:
+		fighter.show_markers = GameState.attack_markers
 
 
-func _winner_text(winners: Array[Fighter], key: String) -> String:
-	if winners.size() != 1:
-		return tr("FIGHT_DRAW")
-	return tr(key) % tr(winners[0].data.name_key)
+## Arcade : combat gagné, on passe au suivant (ou c'est la fin de la série).
+func _next_arcade_fight() -> void:
+	if GameState.next_arcade_fight():
+		_setup_from_menus()
+		start_match()
 
 
-# --- Collisions --------------------------------------------------------------
+# --- Collisions et coups -----------------------------------------------------
 
 func _separate_fighters() -> void:
 	var gap := dummy.global_position.x - player.global_position.x
@@ -336,7 +322,7 @@ func _resolve_hits() -> void:
 		if _hits_barrier(hitbox, defender):
 			attacker.attack_has_hit = true
 			hitstop = maxi(hitstop, 4)
-			_barrier_feedback(hitbox.get_center())
+			feedback.barrier(hitbox.get_center())
 			continue
 		var hurtbox := defender.get_hurtbox_rect()
 		if not hitbox.intersects(hurtbox):
@@ -359,15 +345,14 @@ func _resolve_projectiles() -> void:
 					and projectile.get_rect().intersects(other.get_rect()):
 				finished.append_array([projectile, other])
 				hitstop = maxi(hitstop, 4)
-				effects.burst(HitEffects.Kind.CLASH, (projectile.global_position + other.global_position) / 2.0)
-				sounds.play("block")
+				feedback.clash((projectile.global_position + other.global_position) / 2.0)
 				break
 		if projectile in finished:
 			continue
 		var target := projectile.shooter.opponent
 		if _hits_barrier(projectile.get_rect(), target):
 			finished.append(projectile)
-			_barrier_feedback(projectile.global_position)
+			feedback.barrier(projectile.global_position)
 		elif projectile.get_rect().intersects(target.get_hurtbox_rect()):
 			finished.append(projectile)
 			var hit := projectile.data.hit
@@ -378,36 +363,6 @@ func _resolve_projectiles() -> void:
 	for projectile in finished:
 		projectiles.erase(projectile)
 		_remove_projectile(projectile)
-
-
-## Ce qui se passe après un coup : arrêt sur image, combo, énergie, messages,
-## étincelles et bruitage au point de contact.
-func _apply(result: Fighter.HitResult, attack: AttackData, attacker: Fighter, defender: Fighter, grants_energy: bool, point: Vector2) -> void:
-	match result:
-		Fighter.HitResult.HIT:
-			var heavy := attack.damage >= HEAVY_DAMAGE or attack.knockdown
-			effects.burst(HitEffects.Kind.HIT_HEAVY if heavy else HitEffects.Kind.HIT_LIGHT, point)
-			sounds.play("hit_heavy" if heavy else "hit_light")
-			if heavy:
-				_shake(SHAKE_HEAVY, SHAKE_HEAVY_FRAMES)
-			attacker.combo_hits += 1
-			hitstop = maxi(hitstop, attack.hitstop)
-			if grants_energy:
-				attacker.add_energy(ENERGY_ON_HIT)
-			defender.add_energy(ENERGY_WHEN_HIT)
-		Fighter.HitResult.BLOCKED:
-			effects.burst(HitEffects.Kind.BLOCK, point)
-			sounds.play("block")
-			hitstop = maxi(hitstop, int(attack.hitstop * 0.5))
-			if grants_energy:
-				attacker.add_energy(ENERGY_ON_BLOCKED)
-			defender.add_energy(ENERGY_WHEN_BLOCKING)
-		Fighter.HitResult.PARRIED:
-			effects.burst(HitEffects.Kind.PARRY, point)
-			sounds.play("parry")
-			hitstop = maxi(hitstop, 12)
-			defender.add_energy(ENERGY_ON_PARRY)
-			hud.show_popup("FIGHT_PARRY")
 
 
 ## Les attaques de soutien touchent comme des coups venus de loin :
@@ -424,14 +379,29 @@ func _resolve_assists() -> void:
 	_remove_finished_assists()
 
 
-func _remove_finished_assists() -> void:
-	var finished: Array[Assist] = []
-	for assist in assists:
-		if assist.is_finished():
-			finished.append(assist)
-	for assist in finished:
-		assists.erase(assist)
-		_remove_assist(assist)
+## Ce qui se passe après un coup : arrêt sur image, combo, énergie.
+## (Les étincelles, sons et messages sont dans Feedback.)
+func _apply(result: Fighter.HitResult, attack: AttackData, attacker: Fighter, defender: Fighter, grants_energy: bool, point: Vector2) -> void:
+	feedback.on_hit(result, attack, attacker, defender, point)
+	match result:
+		Fighter.HitResult.HIT:
+			attacker.combo_hits += 1
+			hitstop = maxi(hitstop, attack.hitstop)
+			if grants_energy:
+				attacker.add_energy(ENERGY_ON_HIT)
+			defender.add_energy(ENERGY_WHEN_HIT)
+		Fighter.HitResult.BLOCKED:
+			hitstop = maxi(hitstop, int(attack.hitstop * 0.5))
+			if grants_energy:
+				attacker.add_energy(ENERGY_ON_BLOCKED)
+			defender.add_energy(ENERGY_WHEN_BLOCKING)
+		Fighter.HitResult.PARRIED:
+			hitstop = maxi(hitstop, 12)
+			defender.add_energy(ENERGY_ON_PARRY)
+		Fighter.HitResult.TECHED:
+			hitstop = maxi(hitstop, 6)
+	# Après la mise à jour du combo et de l'énergie (le tutoriel les lit).
+	hit_landed.emit(result, attack, attacker, defender)
 
 
 ## Vrai si cette zone touche le bouclier d'un soutien qui protège ce combattant.
@@ -443,22 +413,17 @@ func _hits_barrier(rect: Rect2, protected: Fighter) -> bool:
 	return false
 
 
-# --- Soutiens, projectiles, effets -------------------------------------------
+## Un combo s'arrête dès que celui qui encaisse peut de nouveau agir.
+func _end_finished_combos() -> void:
+	for fighter in fighters:
+		if fighter.is_free():
+			fighter.opponent.combo_hits = 0
 
-## Un coup ou un projectile arrêté par le bouclier d'un soutien.
-func _barrier_feedback(at: Vector2) -> void:
-	effects.burst(HitEffects.Kind.BLOCK, at)
-	sounds.play("block")
 
-
-func _on_attack_started(attack: AttackData) -> void:
-	if attack.is_ultimate:
-		return
-	sounds.play("special" if attack.energy_cost > 0 else "whoosh", -4.0)
-
+# --- Soutiens, projectiles, ultime -------------------------------------------
 
 func _on_assist_called(caller: Fighter) -> void:
-	sounds.play("assist")
+	feedback.assist_called()
 	var assist := Assist.new()
 	assist.summon(caller.support.assist, caller, FLOOR_Y, ARENA_LEFT, ARENA_RIGHT)
 	assist.projectile_requested.connect(_launch_projectile.bind(true))
@@ -466,6 +431,16 @@ func _on_assist_called(caller: Fighter) -> void:
 	# Le soutien est dessiné derrière les combattants.
 	move_child(assist, player.get_index())
 	assists.append(assist)
+
+
+func _remove_finished_assists() -> void:
+	var finished: Array[Assist] = []
+	for assist in assists:
+		if assist.is_finished():
+			finished.append(assist)
+	for assist in finished:
+		assists.erase(assist)
+		_remove_assist(assist)
 
 
 func _remove_assist(assist: Assist) -> void:
@@ -494,6 +469,11 @@ func _remove_projectile(projectile: Projectile) -> void:
 	projectile.queue_free()
 
 
+func _on_ultimate_started(_fighter: Fighter) -> void:
+	ultimate_freeze = ULTIMATE_FREEZE_FRAMES
+	feedback.ultimate_started()
+
+
 ## Retire tous les projectiles et soutiens, et annule les arrêts en cours.
 func _clear_effects() -> void:
 	for projectile in projectiles:
@@ -505,45 +485,19 @@ func _clear_effects() -> void:
 	hitstop = 0
 	ultimate_freeze = 0
 	slowmo_frames = 0
-	shake_frames = 0
-	hud.clear_popup()
-
-
-func _on_ultimate_started(_fighter: Fighter) -> void:
-	sounds.play("ultimate")
-	ultimate_freeze = ULTIMATE_FREEZE_FRAMES
-	hud.show_popup("FIGHT_ULTIMATE")
-
-
-## Un combo s'arrête dès que celui qui encaisse peut de nouveau agir.
-func _end_finished_combos() -> void:
-	for fighter in fighters:
-		if fighter.is_free():
-			fighter.opponent.combo_hits = 0
+	feedback.clear()
 
 
 # --- Affichage ---------------------------------------------------------------
 
-func _shake(strength: float, frames: int) -> void:
-	shake_strength = maxf(shake_strength if shake_frames > 0 else 0.0, strength)
-	shake_frames = maxi(shake_frames, frames)
-
-
-## Le tremblement s'atténue à chaque frame ; seul l'affichage bouge, pas le combat.
-func _update_shake() -> void:
-	if shake_frames > 0:
-		shake_frames -= 1
-		var strength := shake_strength * shake_frames / float(SHAKE_HEAVY_FRAMES)
-		strength = minf(strength, shake_strength)
-		camera.offset = Vector2(_shake_rng.randf_range(-strength, strength), _shake_rng.randf_range(-strength, strength)).round()
-	else:
-		camera.offset = Vector2.ZERO
-
-
 func _update_hud() -> void:
-	hud.refresh(player, dummy, player_wins, dummy_wins, not training,
-			-1 if training else timer_frames, "" if training else _announce_text())
+	var header := ""
+	if GameState.mode == GameState.Mode.ARCADE:
+		header = tr("ARCADE_FIGHT_N") % [GameState.arcade_index + 1, GameState.arcade_opponents.size()]
+	var footer := tr("FIGHT_PRESS_RESTART") if GameState.mode == GameState.Mode.QUICK else ""
+	hud.refresh(player, dummy, flow.player_wins, flow.dummy_wins, not training,
+			-1 if training else flow.timer_frames, "" if training else flow.announce_text(header, footer))
 	# Pendant l'arrêt de l'ultime, l'écran s'assombrit.
 	dim.visible = ultimate_freeze > 0
 	pause_menu.show_mode(training)
-	tools.show_debug("TRAINING" if training else Phase.keys()[phase])
+	tools.show_debug("TRAINING" if training else MatchFlow.Phase.keys()[flow.phase])

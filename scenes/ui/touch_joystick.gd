@@ -4,10 +4,12 @@ extends Node2D
 ##
 ## Il « appuie » sur les mêmes actions que le clavier (move_left, move_right,
 ## jump, crouch) : le combattant ne fait aucune différence entre les deux.
-## On peut poser le pouce n'importe où dans la zone de gauche de l'écran.
+## On peut poser le pouce n'importe où autour du joystick (pas besoin de viser).
+## Le joueur peut le déplacer et l'agrandir dans les réglages : tout suit la
+## position et la taille (scale) du nœud.
 
-## Zone où un doigt peut prendre le joystick (moitié gauche, bas de l'écran).
-@export var zone := Rect2(0, 110, 220, 160)
+## Distance autour du centre où un doigt peut prendre le joystick, en pixels.
+@export var grab_radius := 80.0
 ## Rayon de la base, en pixels.
 @export var radius := 26.0
 ## En dessous de cette distance du centre, aucune direction.
@@ -25,7 +27,7 @@ var _pressed := {"move_left": false, "move_right": false, "jump": false, "crouch
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
-		if event.pressed and _touch_index == -1 and zone.has_point(event.position):
+		if event.pressed and _touch_index == -1 and can_grab(event.position):
 			_touch_index = event.index
 			_move_knob(event.position)
 		elif not event.pressed and event.index == _touch_index:
@@ -34,8 +36,14 @@ func _input(event: InputEvent) -> void:
 		_move_knob(event.position)
 
 
+## Vrai si ce point de l'écran est assez près du joystick pour le prendre.
+func can_grab(screen_position: Vector2) -> bool:
+	return screen_position.distance_to(global_position) <= grab_radius * scale.x
+
+
 func _move_knob(touch_position: Vector2) -> void:
-	_knob = (touch_position - global_position).limit_length(radius)
+	# Le calcul se fait à la taille d'origine : on divise par l'agrandissement.
+	_knob = ((touch_position - global_position) / scale.x).limit_length(radius)
 	var active := _knob.length() > dead_zone
 	# Les seuils évitent de sauter ou de s'accroupir sans le vouloir
 	# en poussant simplement le joystick sur le côté.

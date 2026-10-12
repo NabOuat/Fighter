@@ -13,12 +13,12 @@ func reset_stats():
 	stats = {p: new_stats(), d: new_stats()}
 
 func play_match(ai_p, ai_d, max_frames := 15000) -> Dictionary:
-	fight._start_match()
+	fight.start_match()
 	fight.tools.dummy_mode = fight.tools.DummyMode.AI
 	fight.tools.ai = ai_d
 	var prev := {p: p.state, d: d.state}
 	var time_ups := 0
-	var last_phase = fight.phase
+	var last_phase = fight.flow.phase
 	for i in max_frames:
 		if ai_p:
 			ai_p.update(p, d, fight.projectiles)
@@ -36,15 +36,15 @@ func play_match(ai_p, ai_d, max_frames := 15000) -> Dictionary:
 		if fight.hud.popup_label.visible and fight.hud.popup_label.text == "FIGHT_PARRY" and fight.hud.popup_frames == fight.hud.POPUP_FRAMES - 1:
 			for f in [p, d]:
 				if f.flash_frames > 0 and f.flash_color == Fighter.PARRY_FLASH: stats[f].parries += 1
-		if fight.phase == fight.Phase.ROUND_OVER and last_phase == fight.Phase.FIGHT and fight.round_result_key == "FIGHT_TIME_UP":
+		if fight.flow.phase == fight.flow.Phase.ROUND_OVER and last_phase == fight.flow.Phase.FIGHT and fight.flow.round_result_key == "FIGHT_TIME_UP":
 			time_ups += 1
-		last_phase = fight.phase
-		if fight.phase == fight.Phase.MATCH_OVER:
+		last_phase = fight.flow.phase
+		if fight.flow.phase == fight.flow.Phase.MATCH_OVER:
 			break
 	var winner := "nul"
-	if fight.player_wins > fight.dummy_wins: winner = "P"
-	elif fight.dummy_wins > fight.player_wins: winner = "D"
-	return {"winner": winner, "score": "%d-%d" % [fight.player_wins, fight.dummy_wins], "time_ups": time_ups, "finished": fight.phase == fight.Phase.MATCH_OVER}
+	if fight.flow.player_wins > fight.flow.dummy_wins: winner = "P"
+	elif fight.flow.dummy_wins > fight.flow.player_wins: winner = "D"
+	return {"winner": winner, "score": "%d-%d" % [fight.flow.player_wins, fight.flow.dummy_wins], "time_ups": time_ups, "finished": fight.flow.phase == fight.flow.Phase.MATCH_OVER}
 
 func _initialize():
 	fight = load("res://scenes/fight/fight.tscn").instantiate()

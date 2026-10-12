@@ -5,17 +5,17 @@ extends "res://tests/test_base.gd"
 
 func play_match(player_ai: FighterAI, dummy_ai: FighterAI) -> String:
 	fight.training = false
-	fight._start_match()
+	fight.start_match()
 	fight.tools.dummy_mode = fight.tools.DummyMode.AI
 	fight.tools.ai = dummy_ai
 	for i in 15000:
 		player_ai.update(p, d, fight.projectiles)
 		await physics_frame
-		if fight.phase == fight.Phase.MATCH_OVER:
+		if fight.flow.phase == fight.flow.Phase.MATCH_OVER:
 			break
-	if fight.player_wins > fight.dummy_wins:
+	if fight.flow.player_wins > fight.flow.dummy_wins:
 		return "joueur"
-	if fight.dummy_wins > fight.player_wins:
+	if fight.flow.dummy_wins > fight.flow.player_wins:
 		return "mannequin"
 	return "nul"
 
@@ -28,7 +28,7 @@ func _initialize() -> void:
 	# Une charge interrompue avant 10 frames ne doit pas lancer de spécial.
 	var wasted := 0
 	for trial in 10:
-		fight._reset_training()
+		fight.reset_training()
 		fight.tools.dummy_mode = fight.tools.DummyMode.AI
 		fight.tools.ai = FighterAI.new(D.NORMAL, 100 + trial)
 		d.energy = 150.0
@@ -45,7 +45,7 @@ func _initialize() -> void:
 	check("charge interrompue : pas de spécial involontaire", wasted == 0, "%d essais ratés sur 10" % wasted)
 
 	# Un plan terminé n'est plus exécuté en attendant la décision suivante.
-	fight._reset_training()
+	fight.reset_training()
 	fight.tools.dummy_mode = fight.tools.DummyMode.AI
 	fight.tools.ai = FighterAI.new(D.EASY, 5)
 	p.position.x = 60

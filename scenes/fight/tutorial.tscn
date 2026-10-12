@@ -1,0 +1,109 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/fight/tutorial.gd" id="1_tutorial"]
+
+[node name="Tutorial" type="CanvasLayer"]
+layer = 5
+script = ExtResource("1_tutorial")
+
+[node name="Box" type="PanelContainer" parent="."]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -150.0
+offset_top = 50.0
+offset_right = 150.0
+offset_bottom = 112.0
+grow_horizontal = 2
+
+[node name="Content" type="VBoxContainer" parent="Box"]
+layout_mode = 2
+theme_override_constants/separation = 1
+
+[node name="Header" type="HBoxContainer" parent="Box/Content"]
+layout_mode = 2
+
+[node name="StepLabel" type="Label" parent="Box/Content/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.722, 0.4, 0.122, 1)
+theme_override_font_sizes/font_size = 7
+text = "TUTO_STEP"
+
+[node name="TitleLabel" type="Label" parent="Box/Content/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.902, 0.678, 0.235, 1)
+theme_override_font_sizes/font_size = 10
+text = "TUTO_MOVE_TITLE"
+horizontal_alignment = 1
+
+[node name="ProgressLabel" type="Label" parent="Box/Content/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 8
+text = "0 / 3"
+
+[node name="SkipButton" type="Button" parent="Box/Content/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 7
+text = "TUTO_SKIP"
+
+[node name="TextLabel" type="Label" parent="Box/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(288, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 8
+text = "TUTO_MOVE"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="EndPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -110.0
+offset_top = -50.0
+offset_right = 110.0
+offset_bottom = 50.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Content" type="VBoxContainer" parent="EndPanel"]
+layout_mode = 2
+theme_override_constants/separation = 5
+alignment = 1
+
+[node name="Title" type="Label" parent="EndPanel/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.902, 0.678, 0.235, 1)
+theme_override_font_sizes/font_size = 14
+text = "TUTO_DONE"
+horizontal_alignment = 1
+
+[node name="Text" type="Label" parent="EndPanel/Content"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 8
+text = "TUTO_DONE_TEXT"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="TrainingButton" type="Button" parent="EndPanel/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+text = "MENU_TRAINING"
+
+[node name="MenuButton" type="Button" parent="EndPanel/Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+text = "MENU_MAIN"

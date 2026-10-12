@@ -1,0 +1,228 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scenes/menus/fighter_select.gd" id="1_select"]
+[ext_resource type="Script" path="res://scenes/ui/pattern_band.gd" id="2_band"]
+[ext_resource type="Script" path="res://scenes/ui/stat_pips.gd" id="3_pips"]
+
+[node name="FighterSelect" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_select")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.11, 0.063, 0.039, 1)
+
+[node name="TopBand" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 8.0
+grow_horizontal = 2
+script = ExtResource("2_band")
+
+[node name="TitleLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 10.0
+offset_bottom = 30.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.902, 0.678, 0.235, 1)
+theme_override_font_sizes/font_size = 14
+text = "MENU_ARCADE"
+horizontal_alignment = 1
+
+[node name="Choices" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_left = 14.0
+offset_top = 32.0
+offset_right = 280.0
+offset_bottom = -34.0
+grow_vertical = 2
+theme_override_constants/separation = 3
+
+[node name="FighterHeading" type="Label" parent="Choices"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.722, 0.4, 0.122, 1)
+theme_override_font_sizes/font_size = 9
+text = "SELECT_FIGHTER"
+
+[node name="FighterCards" type="HBoxContainer" parent="Choices"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="SupportHeading" type="Label" parent="Choices"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.722, 0.4, 0.122, 1)
+theme_override_font_sizes/font_size = 9
+text = "SELECT_SUPPORT"
+
+[node name="SupportCards" type="HBoxContainer" parent="Choices"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="OpponentHeading" type="Label" parent="Choices"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.722, 0.4, 0.122, 1)
+theme_override_font_sizes/font_size = 9
+text = "SELECT_OPPONENT"
+
+[node name="OpponentCards" type="HBoxContainer" parent="Choices"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="DifficultyHeading" type="Label" parent="Choices"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.722, 0.4, 0.122, 1)
+theme_override_font_sizes/font_size = 9
+text = "SELECT_DIFFICULTY"
+
+[node name="DifficultyRow" type="HBoxContainer" parent="Choices"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="EasyButton" type="Button" parent="Choices/DifficultyRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(70, 20)
+layout_mode = 2
+theme_override_font_sizes/font_size = 9
+text = "DIFFICULTY_EASY"
+
+[node name="NormalButton" type="Button" parent="Choices/DifficultyRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(70, 20)
+layout_mode = 2
+theme_override_font_sizes/font_size = 9
+text = "DIFFICULTY_NORMAL"
+
+[node name="HardButton" type="Button" parent="Choices/DifficultyRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(70, 20)
+layout_mode = 2
+theme_override_font_sizes/font_size = 9
+text = "DIFFICULTY_HARD"
+
+[node name="Info" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -186.0
+offset_top = 36.0
+offset_right = -14.0
+offset_bottom = -40.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="Box" type="VBoxContainer" parent="Info"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="NameLabel" type="Label" parent="Info/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.902, 0.678, 0.235, 1)
+theme_override_font_sizes/font_size = 13
+text = "FIGHTER_TEST_A_NAME"
+horizontal_alignment = 1
+
+[node name="Stats" type="GridContainer" parent="Info/Box"]
+layout_mode = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 5
+columns = 2
+
+[node name="PowerLabel" type="Label" parent="Info/Box/Stats"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 9
+text = "STAT_POWER"
+
+[node name="PowerPips" type="Control" parent="Info/Box/Stats"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(50, 7)
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("3_pips")
+
+[node name="DefenseLabel" type="Label" parent="Info/Box/Stats"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 9
+text = "STAT_DEFENSE"
+
+[node name="DefensePips" type="Control" parent="Info/Box/Stats"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(50, 7)
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("3_pips")
+
+[node name="SpeedLabel" type="Label" parent="Info/Box/Stats"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 9
+text = "STAT_SPEED"
+
+[node name="SpeedPips" type="Control" parent="Info/Box/Stats"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(50, 7)
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("3_pips")
+
+[node name="AssistLabel" type="Label" parent="Info/Box"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 8
+text = "SELECT_SUPPORT_IS"
+autowrap_mode = 3
+
+[node name="BackButton" type="Button" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 14.0
+offset_top = -30.0
+offset_right = 104.0
+offset_bottom = -8.0
+grow_vertical = 0
+text = "MENU_BACK"
+
+[node name="FightButton" type="Button" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -134.0
+offset_top = -32.0
+offset_right = -14.0
+offset_bottom = -8.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 12
+text = "SELECT_FIGHT"

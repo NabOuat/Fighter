@@ -1,6 +1,7 @@
 [gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scenes/fighters/fighter.gd" id="1_fighter"]
+[ext_resource type="Script" path="res://scenes/fighters/fighter_view.gd" id="2_view"]
 
 [sub_resource type="RectangleShape2D" id="Shape_body"]
 size = Vector2(20, 56)
@@ -49,3 +50,7 @@ color = Color(0.2, 1, 0.4, 0.25)
 visible = false
 mouse_filter = 2
 color = Color(1, 0.2, 0.2, 0.55)
+
+[node name="View" type="Node2D" parent="."]
+z_index = 10
+script = ExtResource("2_view")

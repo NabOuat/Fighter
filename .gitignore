@@ -7,3 +7,4 @@ assets/characters/*/raw/
 
 # Fichiers exportés (APK)
 /build/
+__pycache__/

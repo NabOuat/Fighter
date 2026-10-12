@@ -103,6 +103,19 @@ chip_damage = 15
 dash_speed = 260.0
 hitbox = Rect2(-4, -46, 30, 40)
 
+[sub_resource type="Resource" id="Resource_yjqhn"]
+script = ExtResource("1_yjqhn")
+startup = 3
+active = 2
+recovery = 24
+damage = 110
+hitstun = 20
+pushback = 130.0
+knockdown = true
+hitstop = 9
+is_throw = true
+hitbox = Rect2(4, -44, 24, 44)
+
 [sub_resource type="Resource" id="Resource_hcf72"]
 script = ExtResource("1_yjqhn")
 startup = 10
@@ -128,6 +141,7 @@ name_key = "FIGHTER_TEST_C_NAME"
 combo = Array[ExtResource("1_yjqhn")]([SubResource("Resource_68l2u"), SubResource("Resource_54xlf"), SubResource("Resource_2i8ld")])
 low_attack = SubResource("Resource_11mww")
 air_attack = SubResource("Resource_tbv3e")
+throw = SubResource("Resource_yjqhn")
 special_1 = SubResource("Resource_e2642")
 special_2 = SubResource("Resource_eqppa")
 ultimate = SubResource("Resource_hcf72")

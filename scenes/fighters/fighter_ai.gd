@@ -9,27 +9,38 @@ extends RefCounted
 ##
 ## Chaque frame, dans cet ordre :
 ##   1. si elle encaisse un coup : tenter l'esquive mystique ;
-##   2. si un coup ou un projectile arrive : parer ou contrer (selon la difficulté) ;
+##   2. si elle VOIT arriver un coup ou un projectile (après son temps de réaction) :
+##      parer à la bonne hauteur ou contrer ; sinon garder sa garde pendant une
+##      série de coups, à la hauteur qu'elle a devinée ;
 ##   3. si l'adversaire a raté un coup juste devant elle : le punir ;
 ##   4. sinon, suivre son plan du moment (avancer, frapper, lancer un projectile...)
 ##      et en choisir un nouveau quand il est fini.
 
 enum Difficulty { EASY, NORMAL, HARD }
-enum Plan { WAIT, APPROACH, RETREAT, COMBO, LOW_ATTACK, JUMP_IN, PROJECTILE, DASH, ULTIMATE, ASSIST, CHARGE }
+enum Plan { WAIT, APPROACH, RETREAT, COMBO, LOW_ATTACK, JUMP_IN, PROJECTILE, DASH, ULTIMATE, ASSIST, CHARGE, GUARD, THROW }
 
 ## Réglages selon la difficulté (les chances vont de 0 à 1).
 ## think : frames entre deux décisions (plus c'est petit, plus elle réagit vite).
+## reaction : frames avant de « voir » un coup qui part. Un humain met 12 à 20 frames :
+##   les coups rapides (4 à 8 frames de préparation) ne se parent donc pas en
+##   réagissant, il faut être déjà en garde, à la bonne hauteur.
+## guard : chance de se mettre en garde par prudence quand l'adversaire est proche.
+## read : 0 = devine la hauteur des coups au hasard, 1 = apprend les habitudes du joueur.
+## throw : chance de projeter un adversaire qui reste en garde.
 const SETTINGS := {
 	Difficulty.EASY: {
-		"think": 28, "block": 0.15, "parry": 0.0, "dodge": 0.0, "aggression": 0.35,
+		"think": 28, "reaction": 22, "block": 0.3, "parry": 0.0, "dodge": 0.0, "aggression": 0.4,
+		"guard": 0.1, "read": 0.0, "throw": 0.05,
 		"punish": 0.1, "cancel": 0.0, "ultimate": 0.3, "assist": 0.1,
 	},
 	Difficulty.NORMAL: {
-		"think": 16, "block": 0.5, "parry": 0.05, "dodge": 0.25, "aggression": 0.55,
+		"think": 16, "reaction": 15, "block": 0.6, "parry": 0.05, "dodge": 0.25, "aggression": 0.6,
+		"guard": 0.2, "read": 0.5, "throw": 0.2,
 		"punish": 0.45, "cancel": 0.3, "ultimate": 0.7, "assist": 0.2,
 	},
 	Difficulty.HARD: {
-		"think": 7, "block": 0.85, "parry": 0.25, "dodge": 0.6, "aggression": 0.7,
+		"think": 7, "reaction": 10, "block": 0.9, "parry": 0.25, "dodge": 0.6, "aggression": 0.7,
+		"guard": 0.25, "read": 0.9, "throw": 0.4,
 		"punish": 0.9, "cancel": 0.8, "ultimate": 1.0, "assist": 0.3,
 	},
 }
@@ -42,6 +53,9 @@ const COMBO_GAP := 7
 const SPECIAL_TAP := 3
 ## Un projectile est une menace quand il est à moins de cette distance.
 const PROJECTILE_ALERT := 110.0
+## Après avoir paré, l'IA garde sa garde encore un peu (comme un joueur pendant une
+## série de coups), sauf si l'adversaire se découvre.
+const GUARD_HOLD_FRAMES := 10
 
 var difficulty: Difficulty
 var rng := RandomNumberGenerator.new()
@@ -61,6 +75,14 @@ var _cancel_key := ""
 var _air_attack_done := false
 ## Vrai pendant une charge d'énergie (et non un appui court sur Spécial).
 var _charging := false
+## Le coup adverse en cours, et depuis combien de frames l'IA le voit.
+var _seen_serial := -1
+var _seen_frames := 0
+## Part des coups bas dans les attaques de l'adversaire (ce que l'IA a appris).
+var _low_ratio := 0.3
+## Hauteur de garde choisie (vraie = accroupie), et frames de garde restantes.
+var _guard_low := false
+var _guard_hold := 0
 
 
 ## seed : graine du hasard (0 = différente à chaque partie, autre = parties rejouables).
@@ -74,6 +96,7 @@ func _init(level: Difficulty = Difficulty.NORMAL, seed := 0) -> void:
 
 ## Appelée à chaque frame par l'arène, avant que le combattant lise ses intentions.
 func update(me: Fighter, op: Fighter, projectiles: Array[Projectile]) -> void:
+	_watch(op)
 	_decide(me, op, projectiles)
 	# Un appui court sur Spécial lance un coup spécial : si l'IA a commencé une
 	# CHARGE et qu'elle est interrompue avant 10 frames, elle garde le bouton
@@ -82,6 +105,21 @@ func update(me: Fighter, op: Fighter, projectiles: Array[Projectile]) -> void:
 		me.intent.special = true
 	if not me.intent.special and me.special_held_frames == 0:
 		_charging = false
+
+
+## Observe l'adversaire : depuis quand son coup est parti, et s'il frappe souvent en bas.
+## Le temps compte aussi pendant les arrêts sur image : on voit le coup venir.
+func _watch(op: Fighter) -> void:
+	var attack := op.current_attack
+	if attack == null or attack.is_throw:
+		return
+	if op.attack_serial == _seen_serial:
+		_seen_frames += 1
+		return
+	_seen_serial = op.attack_serial
+	_seen_frames = 0
+	var low := 1.0 if attack.hit_level == AttackData.HitLevel.LOW else 0.0
+	_low_ratio = lerpf(_low_ratio, low, 0.25)
 
 
 func _decide(me: Fighter, op: Fighter, projectiles: Array[Projectile]) -> void:
@@ -97,7 +135,9 @@ func _decide(me: Fighter, op: Fighter, projectiles: Array[Projectile]) -> void:
 	if me.state == Fighter.State.HITSTUN:
 		if not _dodge_tried:
 			_dodge_tried = true
-			if me.energy >= Fighter.ENERGY_SEGMENT and _roll(s.dodge):
+			# Presque prête pour l'ultime et encore en forme : elle encaisse plutôt que d'esquiver.
+			var keep_for_ultimate := _saving_for_ultimate(me) and me.health > Fighter.MAX_HEALTH * 0.4
+			if me.energy >= Fighter.ENERGY_SEGMENT and not keep_for_ultimate and _roll(s.dodge):
 				intent.guard_pressed = true
 		return
 	_dodge_tried = false
@@ -127,10 +167,12 @@ func _decide(me: Fighter, op: Fighter, projectiles: Array[Projectile]) -> void:
 
 ## Renvoie vrai si l'IA se défend à cette frame (elle ne fait rien d'autre).
 func _defend(me: Fighter, op: Fighter, projectiles: Array[Projectile], distance: float, toward: int, s: Dictionary) -> bool:
-	var threat := _find_threat(me, op, projectiles, distance)
+	var threat := _find_threat(me, op, projectiles, distance, s)
+	if me.state == Fighter.State.BLOCKSTUN:
+		_guard_hold = GUARD_HOLD_FRAMES
 	if threat.is_empty():
 		_threat_key = ""
-		return false
+		return _hold_guard(me, op)
 	if threat.key != _threat_key:
 		# Nouvelle menace : on décide une seule fois si on la pare ou si on la contre.
 		_threat_key = threat.key
@@ -144,18 +186,43 @@ func _defend(me: Fighter, op: Fighter, projectiles: Array[Projectile], distance:
 		intent.guard_pressed = true
 		return true
 	if _will_block:
+		_guard_low = threat.low
+		_guard_hold = GUARD_HOLD_FRAMES
 		intent.guard = true
 		intent.crouch = threat.low
 		return true
-	return false
+	return _hold_guard(me, op)
+
+
+## Garder sa garde pendant une série de coups, à la hauteur devinée. On la lâche
+## dès que l'adversaire termine un coup (pour pouvoir le punir).
+func _hold_guard(me: Fighter, op: Fighter) -> bool:
+	if _guard_hold <= 0:
+		return false
+	_guard_hold -= 1
+	var attack := op.current_attack
+	if attack and op.state == Fighter.State.ATTACK and op.attack_frame > attack.startup + attack.active \
+			and me.state != Fighter.State.BLOCKSTUN:
+		_guard_hold = 0
+		return false
+	me.intent.guard = true
+	me.intent.crouch = _guard_low
+	return true
+
+
+## Garde basse ou haute ? Au hasard, ou selon les habitudes du joueur.
+func _pick_guard_height(s: Dictionary) -> bool:
+	return rng.randf() < lerpf(0.3, _low_ratio, s.read)
 
 
 ## Cherche ce qui va frapper l'IA : un coup de l'adversaire à portée, ou un projectile
 ## qui arrive. Renvoie {} s'il n'y a rien, sinon {key, low, frames_to_hit}.
-func _find_threat(me: Fighter, op: Fighter, projectiles: Array[Projectile], distance: float) -> Dictionary:
+## Un coup n'est visible qu'après le temps de réaction de l'IA.
+func _find_threat(me: Fighter, op: Fighter, projectiles: Array[Projectile], distance: float, s: Dictionary) -> Dictionary:
 	var attack := op.current_attack
 	var facing_me := op.facing == (1 if me.global_position.x > op.global_position.x else -1)
-	if attack and facing_me and op.state in [Fighter.State.ATTACK, Fighter.State.JUMP]:
+	var seen: bool = op.attack_serial == _seen_serial and _seen_frames >= s.reaction
+	if attack and not attack.is_throw and seen and facing_me and op.state in [Fighter.State.ATTACK, Fighter.State.JUMP]:
 		var before_end := attack.startup + attack.active - op.attack_frame
 		var reach := attack.hitbox.position.x + attack.hitbox.size.x + attack.dash_speed / 60.0 * attack.active + 14.0
 		if before_end >= 0 and distance < reach and attack.hitbox.has_area():
@@ -165,7 +232,7 @@ func _find_threat(me: Fighter, op: Fighter, projectiles: Array[Projectile], dist
 				"frames_to_hit": maxi(0, attack.startup + 1 - op.attack_frame),
 			}
 	for projectile in projectiles:
-		if projectile.shooter != op:
+		if projectile.shooter != op or projectile.age < s.reaction:
 			continue
 		var gap := me.global_position.x - projectile.global_position.x
 		var coming := signf(gap) == float(projectile.direction)
@@ -236,23 +303,44 @@ func _choose_plan(me: Fighter, op: Fighter, distance: float, s: Dictionary) -> v
 		else:
 			_start_plan(Plan.APPROACH, rng.randi_range(20, 40))
 	elif distance > CLOSE:
-		if r < aggression * 0.5:
+		if op.state == Fighter.State.GUARD and _roll(s.throw):
+			_start_plan(Plan.THROW, 30)
+		elif r < aggression * 0.5:
 			_start_plan(Plan.APPROACH, rng.randi_range(10, 20))
 		elif r < aggression * 0.7:
 			_start_plan(Plan.JUMP_IN, 70)
 		elif r < aggression * 0.85 and me.data.special_2 and _can_spend(me, s):
 			_start_plan(Plan.DASH, 40)
+		elif r < aggression * 0.85 + s.guard * 0.5:
+			_start_guard(rng.randi_range(12, 24), s)
 		elif r < 0.9:
 			_start_plan(Plan.WAIT, rng.randi_range(8, 20))
 		else:
 			_start_plan(Plan.RETREAT, rng.randi_range(10, 20))
 	else:
-		if r < aggression:
-			_start_plan(Plan.LOW_ATTACK if rng.randf() < 0.3 else Plan.COMBO, 40)
-		elif r < aggression + 0.15:
+		# Un adversaire qui reste en garde se fait projeter.
+		if op.state in [Fighter.State.GUARD, Fighter.State.CROUCH] and _roll(s.throw):
+			_start_plan(Plan.THROW, 30)
+		elif r < aggression:
+			_start_plan(Plan.LOW_ATTACK if _wants_low(op) else Plan.COMBO, 40)
+		elif r < aggression + s.guard:
+			_start_guard(rng.randi_range(15, 30), s)
+		elif r < aggression + s.guard + 0.1:
 			_start_plan(Plan.RETREAT, rng.randi_range(10, 20))
 		else:
 			_start_plan(Plan.WAIT, rng.randi_range(5, 12))
+
+
+## Frapper en bas ? Contre une garde debout qu'on voit, oui ; sinon de temps en temps.
+func _wants_low(op: Fighter) -> bool:
+	if op.state == Fighter.State.GUARD:
+		return not op.guard_low
+	return rng.randf() < 0.3
+
+
+func _start_guard(length: int, s: Dictionary) -> void:
+	_start_plan(Plan.GUARD, length)
+	_guard_low = _pick_guard_height(s)
 
 
 func _start_plan(plan: Plan, length: int) -> void:
@@ -298,6 +386,15 @@ func _follow_plan(me: Fighter, op: Fighter, distance: float, toward: int) -> voi
 			intent.ultimate = f == 0
 		Plan.ASSIST:
 			intent.assist = f == 0
+		Plan.GUARD:
+			intent.guard = true
+			intent.crouch = _guard_low
+		Plan.THROW:
+			# S'approcher jusqu'à être collé, puis avant + Garde.
+			_hold_direction(intent, toward)
+			if distance <= Fighter.THROW_RANGE - 4.0:
+				intent.guard_pressed = true
+				_plan_length = f + 1
 		Plan.CHARGE:
 			# On arrête de charger si l'adversaire s'approche.
 			_charging = true

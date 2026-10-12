@@ -1,8 +1,5 @@
 keys,fr,en
 GAME_TITLE,Legendz Fighting,Legendz Fighting
-MAIN_SETUP_OK,Les fondations sont en place !,The foundations are in place!
-MENU_LANGUAGE,Langue : Français,Language: English
-MENU_PLAY,Jouer,Play
 MENU_SETTINGS,Réglages,Settings
 MENU_QUIT,Quitter,Quit
 FIGHT_ROUND,Round %d,Round %d
@@ -36,3 +33,141 @@ PAUSE_RESTART,Recommencer,Restart
 PAUSE_TRAINING,Mode entraînement,Training mode
 PAUSE_MATCH,Mode combat,Match mode
 TOUCH_PAUSE,II,II
+FIGHT_THROW,Projection !,Throw!
+FIGHT_THROW_TECH,Saisie évitée !,Throw escaped!
+GAME_SUBTITLE,Les légendes d'Afrique de l'Ouest,Legends of West Africa
+TITLE_PRESS,Touchez l'écran pour commencer,Touch the screen to start
+MENU_STORY,Histoire,Story
+MENU_ARCADE,Arcade,Arcade
+MENU_TRAINING,Entraînement,Training
+MENU_ENCYCLOPEDIA,Encyclopédie,Encyclopedia
+MENU_SOON,bientôt,coming soon
+MENU_BACK,Retour,Back
+MENU_CLOSE,Fermer,Close
+MENU_CANCEL,Annuler,Cancel
+MENU_SAVE,Enregistrer,Save
+MENU_MAIN,Menu principal,Main menu
+SETTINGS_LANGUAGE,Langue,Language
+SETTINGS_LANGUAGE_NAME,Français,English
+SETTINGS_MUSIC,Musique,Music
+SETTINGS_SFX,Bruitages,Sound effects
+SETTINGS_VIBRATION,Vibration,Vibration
+SETTINGS_CONTROL_MODE,Contrôles,Controls
+SETTINGS_CONTROL_SIMPLE,Simple (technique : bientôt),Simple (technical: coming soon)
+SETTINGS_LAYOUT,Disposer les boutons,Arrange the buttons
+CONTROLS_TITLE,Disposer les boutons,Arrange the buttons
+CONTROLS_HINT,Touchez un bouton puis faites-le glisser,Touch a button then drag it
+CONTROLS_SELECTED,Bouton choisi : %s,Selected button: %s
+CONTROLS_SIZE,Taille,Size
+CONTROLS_OPACITY,Transparence,Opacity
+CONTROL_JOYSTICK,Joystick,Joystick
+CONTROL_ATTACK,Attaque,Attack
+CONTROL_SPECIAL,Spécial,Special
+CONTROL_GUARD,Garde,Guard
+CONTROL_ASSIST,Soutien,Support
+CONTROL_ULTIMATE,Ultime,Ultimate
+CONTROL_PAUSE,Pause,Pause
+SELECT_FIGHTER,Combattant,Fighter
+SELECT_SUPPORT,Soutien,Support
+SELECT_OPPONENT,Adversaire,Opponent
+SELECT_DIFFICULTY,Difficulté,Difficulty
+DIFFICULTY_EASY,Facile,Easy
+DIFFICULTY_NORMAL,Normal,Normal
+DIFFICULTY_HARD,Difficile,Hard
+STAT_POWER,Puissance,Power
+STAT_DEFENSE,Défense,Defense
+STAT_SPEED,Vitesse,Speed
+SELECT_SUPPORT_IS,Soutien : %s (%s),Support: %s (%s)
+SELECT_ASSIST_ATTACK,attaque,attack
+SELECT_ASSIST_PROTECT,bouclier,shield
+SELECT_ASSIST_HEAL,soin,heal
+SELECT_ASSIST_NONE,aucun,none
+SELECT_FIGHT,Combattre !,Fight!
+RESULT_WIN,Victoire !,Victory!
+RESULT_LOSS,Défaite...,Defeat...
+RESULT_NEXT,Combat suivant,Next fight
+RESULT_RETRY,Réessayer,Try again
+ARCADE_FIGHT_N,Combat %d / %d,Fight %d / %d
+ARCADE_COMPLETE,Arcade terminée !,Arcade complete!
+ARCADE_COMPLETE_DETAIL,Les %d combats sont gagnés.,All %d fights won.
+TOUCH_THROW,Saisie,Throw
+TOUCH_SPECIAL2,Spécial 2,Special 2
+TOUCH_LOW,Bas,Low
+TOUCH_CHARGE,Charge,Charge
+CONTROL_THROW,Saisie,Throw
+CONTROL_SPECIAL2,Spécial 2,Special 2
+CONTROL_LOWATTACK,Coup bas,Low attack
+CONTROL_CHARGE,Charge,Charge
+CONTROLS_RIGHT_HANDED,Droitier,Right-handed
+CONTROLS_LEFT_HANDED,Gaucher,Left-handed
+SETTINGS_TAB_GENERAL,Général,General
+SETTINGS_TAB_CONTROLS,Contrôles,Controls
+SETTINGS_MARKERS,Repères des coups,Attack markers
+SETTINGS_EXTRA_BUTTONS,Boutons en plus,Extra buttons
+SETTINGS_EXTRA_THROW,Saisie,Throw
+SETTINGS_EXTRA_SPECIAL2,Spécial 2,Special 2
+SETTINGS_EXTRA_LOW,Coup bas,Low attack
+SETTINGS_EXTRA_CHARGE,Charge,Charge
+SETTINGS_EXTRA_HINT,"Des raccourcis en un seul appui. Avec le bouton Charge, Spécial part dès l'appui (plus besoin de le lâcher).","One-tap shortcuts. With the Charge button, Special fires as soon as you press it (no need to release)."
+MENU_TUTORIAL,Tutoriel,Tutorial
+TUTO_STEP,Leçon %d / %d,Lesson %d / %d
+TUTO_SKIP,Passer,Skip
+TUTO_WELL_DONE,Bravo !,Well done!
+TUTO_DONE,Tutoriel terminé !,Tutorial complete!
+TUTO_DONE_TEXT,"Tu connais tous les gestes. Entraîne-toi, puis lance-toi dans l'Arcade.","You know every move. Practise, then take on the Arcade."
+TUTO_TOUCH_ATTACK,Attaque,Attack
+TUTO_KEY_ATTACK,J,J
+TUTO_TOUCH_SPECIAL,Spécial,Special
+TUTO_KEY_SPECIAL,K,K
+TUTO_TOUCH_GUARD,Garde,Guard
+TUTO_KEY_GUARD,L,L
+TUTO_TOUCH_ASSIST,Soutien,Support
+TUTO_KEY_ASSIST,I,I
+TUTO_TOUCH_ULTIMATE,Ultime,Ultimate
+TUTO_KEY_ULTIMATE,U,U
+TUTO_TOUCH_FORWARD,joystick vers l'avant,stick forward
+TUTO_KEY_FORWARD,avant (D ou flèche droite),forward (D or right arrow)
+TUTO_TOUCH_BACK,joystick vers l'arrière,stick back
+TUTO_KEY_BACK,arrière (A ou flèche gauche),back (A or left arrow)
+TUTO_TOUCH_DOWN,joystick vers le bas,stick down
+TUTO_KEY_DOWN,bas (S ou flèche bas),down (S or down arrow)
+TUTO_TOUCH_UP,joystick vers le haut,stick up
+TUTO_KEY_UP,haut (W ou flèche haut),up (W or up arrow)
+TUTO_TOUCH_THROW,Saisie,Throw
+TUTO_KEY_THROW,H,H
+TUTO_TOUCH_SPECIAL2,Spécial 2,Special 2
+TUTO_KEY_SPECIAL2,B,B
+TUTO_TOUCH_LOW,Coup bas,Low
+TUTO_KEY_LOW,N,N
+TUTO_TOUCH_CHARGE,Charge,Charge
+TUTO_KEY_CHARGE,C,C
+TUTO_MOVE_TITLE,Se déplacer,Moving
+TUTO_MOVE,"Avance et recule avec {forward} et {back}, puis saute avec {up}.","Walk with {forward} and {back}, then jump with {up}."
+TUTO_COMBO_TITLE,Le combo,The combo
+TUTO_COMBO,Approche-toi et appuie 3 fois de suite sur {attack} : les 3 coups s'enchaînent.,Get close and press {attack} 3 times in a row: the 3 hits chain together.
+TUTO_GUARD_TITLE,La garde,Guarding
+TUTO_GUARD,L'adversaire attaque. Maintiens {guard} (ou recule) pour parer ses coups.,Your opponent attacks. Hold {guard} (or walk back) to block.
+TUTO_LOW_TITLE,Coup bas,Low attack
+TUTO_LOW,Il se garde debout : frappe en bas avec {down} + {attack}. Le repère bleu (flèche vers le bas) montre un coup bas.,He guards standing: hit low with {down} + {attack}. The blue down-arrow marker shows a low attack.
+TUTO_LOW_EXTRA,Ou appuie sur le bouton {low}.,Or press the {low} button.
+TUTO_OVERHEAD_TITLE,Coup sauté,Jump attack
+TUTO_OVERHEAD,Il se garde accroupi : saute vers lui ({up}) et frappe en l'air ({attack}). Le repère orange (flèche vers le haut) se pare debout.,He guards crouching: jump at him ({up}) and attack in the air ({attack}). The orange up-arrow marker must be blocked standing.
+TUTO_THROW_TITLE,La projection,The throw
+TUTO_THROW,Il reste en garde : colle-toi à lui et fais {forward} + {guard}. Une projection traverse la garde.,He keeps guarding: get close and press {forward} + {guard}. A throw goes through guard.
+TUTO_THROW_EXTRA,Ou appuie sur le bouton {throw}.,Or press the {throw} button.
+TUTO_SPECIAL_TITLE,Spécial 1,Special 1
+TUTO_SPECIAL,Appuie brièvement sur {special} : un projectile part. Il coûte 1 segment d'énergie.,Tap {special}: a projectile flies out. It costs 1 energy segment.
+TUTO_SPECIAL2_TITLE,Spécial 2,Special 2
+TUTO_SPECIAL2,Fais {forward} + {special} : une attaque foncée.,Press {forward} + {special}: a rushing attack.
+TUTO_SPECIAL2_EXTRA,Ou appuie sur le bouton {special2}.,Or press the {special2} button.
+TUTO_CHARGE_TITLE,Charger l'énergie,Charging energy
+TUTO_CHARGE,Maintiens {special} pour charger ton énergie (tu es sans défense pendant ce temps). Remplis 2 segments.,Hold {special} to charge your energy (you can't defend meanwhile). Fill 2 segments.
+TUTO_CHARGE_EXTRA,"Avec le bouton {charge}, maintiens-le.","With the {charge} button, hold it."
+TUTO_DODGE_TITLE,L'esquive mystique,Mystic dodge
+TUTO_DODGE,"Laisse-toi toucher, puis appuie sur {guard} pendant que tu encaisses : tu disparais dans son dos (1 segment).","Get hit, then press {guard} while you're stunned: you vanish behind him (1 segment)."
+TUTO_PARRY_TITLE,Le contre parfait,Perfect parry
+TUTO_PARRY,Appuie sur {guard} juste avant que son coup te touche : il reste sans défense. C'est difficile : tu peux passer.,Press {guard} just before his hit lands: he's left open. It's hard: you can skip it.
+TUTO_ASSIST_TITLE,Le soutien,Support
+TUTO_ASSIST,Appuie sur {assist} : ton allié vient t'aider. Il revient après 15 secondes.,Press {assist}: your ally comes to help. He's back after 15 seconds.
+TUTO_ULTIMATE_TITLE,L'ultime,Ultimate
+TUTO_ULTIMATE,Ta barre d'énergie est pleine : appuie sur {ultimate} pour déclencher ta technique ultime.,Your energy bar is full: press {ultimate} to unleash your ultimate technique.

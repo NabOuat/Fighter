@@ -48,6 +48,9 @@ enum HitLevel { HIGH, MID, LOW }
 @export var invulnerable_startup := false
 ## Coché : c'est l'ultime (arrêt du combat et mise en scène avant le coup).
 @export var is_ultimate := false
+## Coché : c'est une projection (saisie). Elle ne peut être ni parée ni contrée ;
+## on l'évite en sautant, ou en projetant au même moment.
+@export var is_throw := false
 
 @export_group("Zone de frappe")
 ## Rectangle qui touche, en pixels, mesuré depuis les pieds du combattant

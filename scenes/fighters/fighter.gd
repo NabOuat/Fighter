@@ -23,7 +23,9 @@ signal attack_started(attack: AttackData)
 
 enum State { IDLE, WALK, CROUCH, JUMP, ATTACK, GUARD, BLOCKSTUN, HITSTUN, KNOCKDOWN, GETUP, DODGE, CHARGE }
 ## Ce qui arrive quand un coup atteint le combattant.
-enum HitResult { HIT, BLOCKED, PARRIED }
+## MISSED : projection sur un adversaire qu'on ne peut pas saisir (en l'air, sonné...).
+## TECHED : les deux ont projeté en même temps, personne n'est saisi.
+enum HitResult { HIT, BLOCKED, PARRIED, MISSED, TECHED }
 
 ## La vie est la même pour tous les combattants (décision du cahier des charges).
 const MAX_HEALTH := 1000
@@ -52,6 +54,11 @@ const PARRIED_STUN_FRAMES := 24
 const DODGE_FRAMES := 14
 ## Distance de réapparition derrière l'adversaire.
 const DODGE_BEHIND_DISTANCE := 28.0
+## Projection : distance maximale entre les deux combattants pour la tenter (collés).
+const THROW_RANGE := 36.0
+## Projection évitée : les deux combattants se repoussent et reprennent leurs esprits.
+const THROW_TECH_FRAMES := 14
+const THROW_TECH_PUSH := 150.0
 ## Ralentissement du recul à chaque frame (0,85 = perd 15 % de sa vitesse).
 const PUSHBACK_FRICTION := 0.85
 const KNOCKDOWN_LAUNCH := 220.0
@@ -68,6 +75,8 @@ const PARRY_FLASH := Color(0.3, 1.0, 1.0)
 @export var is_player := true
 ## Affiche les zones de frappe (rouge) et vulnérables (vert) pour régler les coups.
 @export var show_boxes := true
+## Affiche les repères des coups qui se préparent (réglage « Repères des coups »).
+@export var show_markers := true
 
 ## L'adversaire, donné par l'arène.
 var opponent: Fighter
@@ -91,6 +100,9 @@ var attack_frame := 0
 var attack_serial := 0
 ## Position dans le combo (0 = premier coup).
 var combo_index := -1
+## Vrai si Attaque a été appuyé pendant le coup en cours : le coup suivant du
+## combo partira dès que possible (on peut taper vite sans perdre d'appui).
+var chain_queued := false
 ## Vrai quand l'attaque en cours a déjà touché (un coup ne touche qu'une fois).
 var attack_has_hit := false
 ## Nombre de coups portés d'affilée sans que l'adversaire puisse réagir.
@@ -104,8 +116,16 @@ var buffered_guard := 0
 var buffered_special := 0
 var buffered_ultimate := 0
 var buffered_assist := 0
+## Boutons « en plus » (optionnels, pour le tactile) : projection et coup bas en un appui.
+var buffered_throw := 0
+var buffered_low := false
+## Vrai : maintenir Spécial charge l'énergie (un appui court lance le spécial).
+## Faux (le joueur a un bouton Charge) : Spécial part dès l'appui, sans attendre.
+var special_hold_charges := true
 ## Vrai si le dernier appui sur Spécial était accompagné de la direction avant.
 var special_forward := false
+## Vrai si le dernier appui sur Garde était accompagné de la direction avant (projection).
+var guard_forward := false
 ## Depuis combien de frames Spécial est maintenu (0 = relâché).
 var special_held_frames := 0
 ## Nombre de projectiles de ce combattant encore à l'écran (un seul à la fois).
@@ -117,32 +137,28 @@ var _heal_buffer := 0.0
 var flash_color := HIT_FLASH
 ## Ce que le combattant veut faire à cette frame.
 ## Rempli par le joueur (clavier, tactile) ou par l'IA / le mannequin.
-## « attack », « guard_pressed », « ultimate » et « assist » = appui à cette frame ;
-## les autres (dont « special ») = touche maintenue.
+## « attack », « guard_pressed », « ultimate », « assist », « throw », « special_2 »
+## et « low_attack » = appui à cette frame ; les autres (dont « special » et
+## « charge ») = touche maintenue.
 var intent := {
 	"left": false, "right": false, "jump": false, "crouch": false,
 	"attack": false, "guard": false, "guard_pressed": false,
 	"special": false, "ultimate": false, "assist": false,
+	"throw": false, "special_2": false, "low_attack": false, "charge": false,
 }
 
-@onready var pivot: Node2D = $Pivot
-@onready var body: ColorRect = $Pivot/Body
-@onready var front: ColorRect = $Pivot/Front
-@onready var arm: ColorRect = $Arm
-@onready var aura: ColorRect = $Aura
-@onready var hurtbox_view: ColorRect = $HurtboxView
-@onready var hitbox_view: ColorRect = $HitboxView
+## L'apparence et les aides visuelles (fighter_view.gd).
+@onready var view: FighterView = $View
 
 
 func _ready() -> void:
 	if data == null:
 		push_error("Fighter : aucune fiche FighterData assignée dans l'Inspecteur.")
 		return
-	body.color = data.placeholder_color
 	reset()
 
 
-## Remet le combattant en début de manche (l'énergie est gardée d'une manche à l'autre).
+## Remet le combattant en début de manche (l'arène règle l'énergie).
 func reset() -> void:
 	health = MAX_HEALTH
 	velocity = Vector2.ZERO
@@ -154,6 +170,8 @@ func reset() -> void:
 	buffered_special = 0
 	buffered_ultimate = 0
 	buffered_assist = 0
+	buffered_throw = 0
+	buffered_low = false
 	special_held_frames = 0
 	parry_window = 0
 	# Le soutien est disponible dès le début de chaque manche.
@@ -167,17 +185,17 @@ func reset() -> void:
 ## pour ne perdre aucun appui.
 func poll_input() -> void:
 	if is_player:
-		intent.left = Input.is_action_pressed("move_left")
-		intent.right = Input.is_action_pressed("move_right")
-		intent.jump = Input.is_action_pressed("jump")
-		intent.crouch = Input.is_action_pressed("crouch")
-		intent.guard = Input.is_action_pressed("guard")
-		intent.attack = Input.is_action_just_pressed("attack")
-		intent.guard_pressed = Input.is_action_just_pressed("guard")
-		intent.special = Input.is_action_pressed("special")
-		intent.ultimate = Input.is_action_just_pressed("ultimate")
-		intent.assist = Input.is_action_just_pressed("assist")
+		PlayerInput.read(intent)
 	_read_special_button()
+	if intent.special_2:
+		# Bouton « Spécial 2 » : comme avant + Spécial, en un seul appui.
+		special_forward = true
+		buffered_special = INPUT_BUFFER_FRAMES
+	if intent.throw:
+		buffered_throw = INPUT_BUFFER_FRAMES
+	if intent.low_attack:
+		buffered_attack = INPUT_BUFFER_FRAMES
+		buffered_low = true
 	if intent.assist:
 		buffered_assist = INPUT_BUFFER_FRAMES
 	if intent.ultimate:
@@ -186,21 +204,30 @@ func poll_input() -> void:
 		buffered_attack = INPUT_BUFFER_FRAMES
 	if intent.guard_pressed:
 		buffered_guard = INPUT_BUFFER_FRAMES
+		guard_forward = _input_direction() == facing
 		parry_window = PARRY_WINDOW_FRAMES
 	intent.attack = false
 	intent.guard_pressed = false
 	intent.ultimate = false
 	intent.assist = false
+	intent.throw = false
+	intent.special_2 = false
+	intent.low_attack = false
 
 
 ## Le bouton Spécial sert à deux choses : un appui court lance un coup spécial
-## (au relâchement), un appui long charge l'énergie.
+## (au relâchement), un appui long charge l'énergie. Avec un bouton Charge à
+## part (special_hold_charges faux), le spécial part dès l'appui.
 func _read_special_button() -> void:
 	if intent.special:
 		special_held_frames += 1
 		# La direction est lue au moment de l'appui : on la lâche souvent avant le bouton.
 		if special_held_frames == 1:
 			special_forward = _input_direction() == facing
+			if not special_hold_charges:
+				buffered_special = INPUT_BUFFER_FRAMES
+	elif special_held_frames > 0 and not special_hold_charges:
+		special_held_frames = 0
 	elif special_held_frames > 0:
 		if special_held_frames < CHARGE_THRESHOLD_FRAMES:
 			buffered_special = INPUT_BUFFER_FRAMES
@@ -217,13 +244,18 @@ func release_controls() -> void:
 	buffered_special = 0
 	buffered_ultimate = 0
 	buffered_assist = 0
+	buffered_throw = 0
+	buffered_low = false
 
 
 ## Une frame de jeu.
 func tick(delta: float) -> void:
 	buffered_attack = maxi(0, buffered_attack - 1)
+	if buffered_attack == 0:
+		buffered_low = false
 	buffered_guard = maxi(0, buffered_guard - 1)
 	buffered_special = maxi(0, buffered_special - 1)
+	buffered_throw = maxi(0, buffered_throw - 1)
 	buffered_ultimate = maxi(0, buffered_ultimate - 1)
 	buffered_assist = maxi(0, buffered_assist - 1)
 	assist_cooldown = maxi(0, assist_cooldown - 1)
@@ -277,12 +309,23 @@ func _ground_state() -> void:
 		return
 	if buffered_special > 0 and _try_special():
 		return
-	if special_held_frames >= CHARGE_THRESHOLD_FRAMES:
+	if intent.charge or (special_hold_charges and special_held_frames >= CHARGE_THRESHOLD_FRAMES):
 		velocity.x = 0
 		_change_state(State.CHARGE)
 		return
+	# Projection : collé à l'adversaire, avant + Garde. Plus loin, Garde reste
+	# une garde ou un contre parfait, même en avançant.
+	var throw_asked := buffered_throw > 0 or (buffered_guard > 0 and guard_forward)
+	if throw_asked and data.throw and _opponent_in_throw_range():
+		buffered_guard = 0
+		buffered_throw = 0
+		parry_window = 0
+		_start_attack(data.throw)
+		return
 	if _consume_attack():
-		if intent.crouch:
+		var low: bool = intent.crouch or buffered_low
+		buffered_low = false
+		if low:
 			_start_attack(data.low_attack)
 		else:
 			_start_combo(0)
@@ -335,8 +378,11 @@ func _attack_state() -> void:
 	if in_recovery and attack.energy_cost == 0 and attack_has_hit and buffered_special > 0 and _try_special():
 		return
 	# Enchaînement : un nouvel appui pendant le coup lance le coup suivant
-	# du combo dès que le coup actuel a fini de pouvoir toucher.
-	if in_recovery and _can_chain() and _consume_attack():
+	# du combo dès que le coup actuel a fini de pouvoir toucher. Un appui
+	# arrivé trop tôt est gardé jusque-là.
+	if _can_chain() and not in_recovery and not chain_queued and _consume_attack():
+		chain_queued = true
+	if in_recovery and _can_chain() and (chain_queued or _consume_attack()):
 		_start_combo(combo_index + 1)
 		return
 	if attack_frame >= current_attack.total_frames():
@@ -383,7 +429,8 @@ func _getup_state() -> void:
 func _charge_state() -> void:
 	velocity.x = 0
 	add_energy(CHARGE_RATE)
-	if special_held_frames == 0 or energy >= MAX_ENERGY:
+	var holding: bool = intent.charge or (special_hold_charges and special_held_frames > 0)
+	if not holding or energy >= MAX_ENERGY:
 		_change_state(State.IDLE)
 
 
@@ -425,6 +472,7 @@ func _prepare_attack(attack: AttackData) -> void:
 	current_attack = attack
 	attack_frame = 0
 	attack_has_hit = false
+	chain_queued = false
 	attack_serial += 1
 	attack_started.emit(attack)
 
@@ -502,6 +550,15 @@ func _can_block(attack: AttackData, attacker: Fighter) -> bool:
 	return true
 
 
+func _opponent_in_throw_range() -> bool:
+	return opponent != null and absf(opponent.global_position.x - global_position.x) <= THROW_RANGE
+
+
+## Vrai si on peut être saisi : au sol, et ni sonné, ni à terre, ni en plein coup.
+func _can_be_thrown() -> bool:
+	return is_on_floor() and state in [State.IDLE, State.WALK, State.CROUCH, State.GUARD, State.CHARGE]
+
+
 func _is_holding_back(attacker: Fighter) -> bool:
 	var away := 1 if global_position.x >= attacker.global_position.x else -1
 	return _input_direction() == away
@@ -531,7 +588,7 @@ func get_hitbox_rect() -> Rect2:
 		return Rect2()
 	if not current_attack.is_active_frame(attack_frame):
 		return Rect2()
-	return _attack_rect(current_attack)
+	return attack_rect(current_attack)
 
 
 ## Zone où le combattant peut être touché. Vide s'il est intouchable.
@@ -540,7 +597,7 @@ func get_hurtbox_rect() -> Rect2:
 		return Rect2()
 	if current_attack and current_attack.invulnerable_startup and attack_frame <= current_attack.startup:
 		return Rect2()
-	var height := _current_height()
+	var height := current_height()
 	return Rect2(global_position + Vector2(-BODY_WIDTH / 2.0, -height), Vector2(BODY_WIDTH, height))
 
 
@@ -548,6 +605,8 @@ func get_hurtbox_rect() -> Rect2:
 ## Renvoie ce qui s'est passé : touché, paré ou contré.
 ## remote : le coup ne vient pas du corps de l'attaquant (projectile ou soutien).
 func receive_attack(attack: AttackData, attacker: Fighter, remote := false) -> HitResult:
+	if attack.is_throw:
+		return _receive_throw(attack, attacker)
 	var can_parry := is_on_floor() and state in [State.IDLE, State.WALK, State.CROUCH, State.GUARD, State.BLOCKSTUN]
 	if parry_window > 0 and can_parry:
 		parry_window = 0
@@ -562,6 +621,30 @@ func receive_attack(attack: AttackData, attacker: Fighter, remote := false) -> H
 		return HitResult.BLOCKED
 	_take_damage(attack, attacker)
 	return HitResult.HIT
+
+
+## Une projection traverse la garde et le contre parfait. On l'évite en étant en
+## l'air ou déjà occupé, ou en projetant soi-même au même moment.
+func _receive_throw(attack: AttackData, attacker: Fighter) -> HitResult:
+	var throwing := current_attack != null and current_attack.is_throw 			and attack_frame <= current_attack.startup + current_attack.active
+	if throwing:
+		tech_throw(attacker)
+		attacker.tech_throw(self)
+		return HitResult.TECHED
+	if not _can_be_thrown():
+		return HitResult.MISSED
+	_take_damage(attack, attacker)
+	return HitResult.HIT
+
+
+## Projection évitée : on est repoussé, sans dégâts.
+func tech_throw(other: Fighter) -> void:
+	current_attack = null
+	combo_index = -1
+	velocity.x = _direction_from(other) * THROW_TECH_PUSH
+	stun_frames = THROW_TECH_FRAMES
+	_flash(BLOCK_FLASH)
+	_change_state(State.BLOCKSTUN)
 
 
 ## Appelée quand l'adversaire a contré notre coup : on reste sans défense un moment.
@@ -641,7 +724,7 @@ func _is_low() -> bool:
 	return state == State.ATTACK and current_attack == data.low_attack
 
 
-func _current_height() -> float:
+func current_height() -> float:
 	if _is_low():
 		return CROUCH_HEIGHT
 	if state == State.KNOCKDOWN or state == State.GETUP:
@@ -652,55 +735,12 @@ func _current_height() -> float:
 
 
 ## Rectangle d'une attaque, retourné selon le côté où regarde le combattant.
-func _attack_rect(attack: AttackData) -> Rect2:
+func attack_rect(attack: AttackData) -> Rect2:
 	var box := attack.hitbox
 	var x := box.position.x if facing == 1 else -box.position.x - box.size.x
 	return Rect2(global_position + Vector2(x, box.position.y), box.size)
 
 
-## Met les rectangles à jour pour qu'ils montrent l'état du combattant.
+## L'affichage suit l'état du combattant (voir fighter_view.gd).
 func _update_visuals() -> void:
-	var height := _current_height()
-	pivot.scale.x = facing
-	body.size = Vector2(BODY_WIDTH, height)
-	body.position = Vector2(-BODY_WIDTH / 2.0, -height)
-	body.color = flash_color if flash_frames > 0 else data.placeholder_color
-	front.position.y = -height + 6
-	front.visible = state != State.KNOCKDOWN
-	# Pendant l'esquive, le combattant devient presque transparent.
-	modulate.a = 0.3 if state == State.DODGE else 1.0
-
-	hurtbox_view.visible = show_boxes and get_hurtbox_rect().has_area()
-	hurtbox_view.size = body.size
-	hurtbox_view.position = body.position
-
-	var attacking := current_attack != null and attack_frame <= current_attack.startup + current_attack.active
-	hitbox_view.visible = show_boxes and attacking and current_attack.is_active_frame(attack_frame)
-	if attacking:
-		# Le « bras » montre le coup pendant sa préparation et son temps actif.
-		var rect := _attack_rect(current_attack)
-		rect.position -= global_position
-		arm.visible = attack_frame >= current_attack.startup / 2.0
-		arm.color = data.placeholder_color.darkened(0.2)
-		arm.position = rect.position
-		arm.size = rect.size
-		hitbox_view.position = rect.position
-		hitbox_view.size = rect.size
-	elif state in [State.GUARD, State.BLOCKSTUN]:
-		# En garde, le « bras » devient un bouclier levé devant le corps.
-		arm.visible = true
-		arm.color = data.placeholder_color.darkened(0.45)
-		arm.size = Vector2(5, height * 0.7)
-		arm.position = Vector2(facing * (BODY_WIDTH / 2.0) - (5 if facing == 1 else 0) + facing * 2, -height + 2)
-	else:
-		arm.visible = false
-
-	# L'aura : bleue quand on charge, dorée pendant la préparation de l'ultime.
-	var ultimate_startup := current_attack != null and current_attack.is_ultimate and attack_frame <= current_attack.startup
-	aura.visible = state == State.CHARGE or ultimate_startup
-	if aura.visible:
-		var pulse := 0.25 + 0.15 * sin(Time.get_ticks_msec() / 60.0)
-		var aura_color := Color(1.0, 0.85, 0.35) if ultimate_startup else Color(0.3, 0.85, 1.0)
-		aura.color = Color(aura_color, pulse)
-		aura.size = body.size + Vector2(12, 10)
-		aura.position = body.position - Vector2(6, 10)
+	view.refresh()

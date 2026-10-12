@@ -10,6 +10,10 @@
 [ext_resource type="Script" path="res://scenes/fight/hit_effects.gd" id="10_effects"]
 [ext_resource type="Script" path="res://scenes/fight/sound_bank.gd" id="11_sounds"]
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="12_pause"]
+[ext_resource type="PackedScene" path="res://scenes/ui/match_result.tscn" id="13_result"]
+[ext_resource type="Script" path="res://scenes/fight/match_flow.gd" id="14_flow"]
+[ext_resource type="Script" path="res://scenes/fight/fight_feedback.gd" id="15_feedback"]
+[ext_resource type="Script" path="res://scenes/fight/match_log.gd" id="16_log"]
 
 [sub_resource type="RectangleShape2D" id="Shape_floor"]
 size = Vector2(480, 40)
@@ -94,3 +98,14 @@ theme_override_font_sizes/font_size = 8
 [node name="TouchControls" parent="." instance=ExtResource("9_touch")]
 
 [node name="PauseMenu" parent="." instance=ExtResource("12_pause")]
+
+[node name="MatchResult" parent="." instance=ExtResource("13_result")]
+
+[node name="MatchFlow" type="Node" parent="."]
+script = ExtResource("14_flow")
+
+[node name="Feedback" type="Node" parent="."]
+script = ExtResource("15_feedback")
+
+[node name="MatchLog" type="Node" parent="."]
+script = ExtResource("16_log")
