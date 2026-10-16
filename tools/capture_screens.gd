@@ -16,6 +16,7 @@ func _initialize() -> void:
 	gs.dry_run = true
 	# Réglages neutres dans un fichier à part : on ne touche jamais à ceux du joueur.
 	gs.reset_settings("user://capture_settings.cfg")
+	gs.story.reset("user://capture_progress.cfg", true)
 
 	await shot("res://scenes/menus/title_screen.tscn", "01_titre")
 	var menu = await shot("res://scenes/menus/main_menu.tscn", "02_menu", false)
@@ -51,6 +52,30 @@ func _initialize() -> void:
 	fight.queue_free()
 	for button in gs.EXTRA_BUTTONS:
 		gs.extra_buttons[button] = false
+
+	# Mode Histoire : la carte (chapitre 1 fini, déblocage annoncé), une case du
+	# griot, une case pas encore dessinée, puis un combat de survie.
+	gs.story.reset("user://capture_progress.cfg")
+	gs.story.start(1)
+	gs.story.step_index = gs.story.current_chapter().steps.size() - 1
+	gs.story.advance()
+	await shot("res://scenes/story/story_map.tscn", "10_histoire_carte")
+	gs.story.start(0)
+	var panels = await shot("res://scenes/story/story_panels.tscn", "11_histoire_griot", false)
+	panels.next()
+	panels.next()
+	panels.next()
+	await capture("12_histoire_case")
+	panels.queue_free()
+	gs.story.start(1)
+	await shot("res://scenes/story/story_panels.tscn", "13_histoire_case_manquante")
+	gs.story.start(2)
+	gs.start_story_fight(gs.story.chapters()[2].steps[1].fight)
+	fight = await shot("res://scenes/fight/fight.tscn", "14_histoire_survie", false)
+	for i in 60:
+		await physics_frame
+	await capture("15_histoire_survie_combat")
+	fight.queue_free()
 	quit()
 
 

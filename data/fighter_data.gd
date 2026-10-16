@@ -66,8 +66,11 @@ enum Reach { MELEE, LONG_WEAPON, RANGED }
 @export var placeholder_color: Color = Color.WHITE
 ## Portrait pour l'écran de sélection (plus tard).
 @export var portrait: Texture2D
-## Animations du personnage (plus tard).
+## Animations du personnage (images SpriteLab).
 @export var sprite_frames: SpriteFrames
+## Teinte appliquée au dessin (blanc = aucune) : sert à décliner un personnage
+## en un autre (ex : les guerriers d'Itsa sont Dakon assombri).
+@export var tint := Color.WHITE
 
 
 func damage_multiplier() -> float:

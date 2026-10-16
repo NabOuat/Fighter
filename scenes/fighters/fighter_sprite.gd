@@ -62,7 +62,7 @@ func refresh() -> void:
 	flip_h = f.facing == -1
 	var choice := _choose()
 	_show(choice[0], choice[1])
-	modulate = Color.WHITE
+	modulate = f.data.tint
 	# Un coup se prépare : le dessin s'éclaire (on le voit venir).
 	var attack := f.current_attack
 	if f.show_markers and attack and f.attack_frame <= attack.startup and attack.hitbox.has_area():

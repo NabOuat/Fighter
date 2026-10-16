@@ -2,6 +2,7 @@ class_name MatchResult
 extends CanvasLayer
 ## La fenêtre de fin de combat en Arcade : victoire (combat suivant), défaite
 ## (réessayer), ou fin de la série (Arcade terminée). Toujours un bouton Menu.
+## En Histoire : Continuer (ou Réessayer) et retour à la carte des chapitres.
 
 signal next_requested
 signal retry_requested
@@ -27,6 +28,7 @@ func _ready() -> void:
 func show_result(result: Outcome, fight_number: int, fight_count: int) -> void:
 	outcome = result
 	visible = true
+	menu_button.text = "MENU_MAIN"
 	match result:
 		Outcome.WIN:
 			title_label.text = tr("RESULT_WIN")
@@ -41,6 +43,18 @@ func show_result(result: Outcome, fight_number: int, fight_count: int) -> void:
 			detail_label.text = tr("ARCADE_COMPLETE_DETAIL") % fight_count
 	main_button.visible = result != Outcome.COMPLETE
 	(menu_button if result == Outcome.COMPLETE else main_button).grab_focus.call_deferred()
+
+
+## Fin d'un combat du mode Histoire (chapter : titre du chapitre déjà traduit).
+func show_story(won: bool, chapter: String) -> void:
+	outcome = Outcome.WIN if won else Outcome.LOSS
+	visible = true
+	title_label.text = tr("STORY_WIN" if won else "STORY_LOSS")
+	detail_label.text = chapter
+	main_button.text = "STORY_CONTINUE" if won else "STORY_RETRY"
+	main_button.visible = true
+	menu_button.text = "STORY_BACK_MAP"
+	main_button.grab_focus.call_deferred()
 
 
 func hide_result() -> void:

@@ -1,6 +1,6 @@
 extends MenuScreen
 ## Le menu principal : Histoire, Arcade, Entraînement, Tutoriel, Encyclopédie, Réglages.
-## Histoire et Encyclopédie sont grisés (« bientôt ») tant qu'ils n'existent pas.
+## L'Encyclopédie est grisée (« bientôt ») tant qu'elle n'existe pas.
 
 const SETTINGS_SCENE := preload("res://scenes/menus/settings_menu.tscn")
 
@@ -14,6 +14,7 @@ const SETTINGS_SCENE := preload("res://scenes/menus/settings_menu.tscn")
 
 
 func _ready() -> void:
+	story_button.pressed.connect(open_story)
 	arcade_button.pressed.connect(_open_select.bind(GameState.Mode.ARCADE))
 	training_button.pressed.connect(_open_select.bind(GameState.Mode.TRAINING))
 	tutorial_button.pressed.connect(start_tutorial)
@@ -22,7 +23,7 @@ func _ready() -> void:
 	# Sur téléphone, on quitte avec le bouton « retour » : pas de bouton Quitter.
 	quit_button.visible = not OS.has_feature("mobile")
 	_refresh_texts()
-	focus_first(arcade_button)
+	focus_first(story_button)
 
 
 func _notification(what: int) -> void:
@@ -33,13 +34,18 @@ func _notification(what: int) -> void:
 
 ## Les modes pas encore faits affichent « (bientôt) ».
 func _refresh_texts() -> void:
-	story_button.text = "%s  (%s)" % [tr("MENU_STORY"), tr("MENU_SOON")]
 	encyclopedia_button.text = "%s  (%s)" % [tr("MENU_ENCYCLOPEDIA"), tr("MENU_SOON")]
 
 
 func _open_select(mode: GameState.Mode) -> void:
 	GameState.mode = mode
 	GameState.go_to(GameState.FIGHTER_SELECT)
+
+
+## Le mode Histoire commence par la carte des chapitres.
+func open_story() -> void:
+	GameState.mode = GameState.Mode.STORY
+	GameState.go_to(GameState.STORY_MAP)
 
 
 ## Le tutoriel se joue directement, sans écran de sélection.

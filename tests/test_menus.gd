@@ -115,7 +115,9 @@ func _initialize() -> void:
 	var menu = load("res://scenes/menus/main_menu.tscn").instantiate()
 	root.add_child(menu)
 	await process_frame
-	check("Histoire et Encyclopédie sont grisés", menu.story_button.disabled and menu.encyclopedia_button.disabled)
+	check("Histoire est ouverte, l'Encyclopédie grisée", not menu.story_button.disabled and menu.encyclopedia_button.disabled)
+	menu.open_story()
+	check("Histoire ouvre la carte des chapitres", gs.last_screen == gs.STORY_MAP and gs.mode == gs.Mode.STORY)
 	var settings = menu.open_settings()
 	await process_frame
 	settings.language_button.pressed.emit()

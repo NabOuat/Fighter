@@ -30,6 +30,12 @@ const TUTORIAL_SCENE := preload("res://scenes/fight/tutorial.tscn")
 
 ## Après un K.O., le combat passe au ralenti un moment.
 const KO_SLOWMO_FRAMES := 60
+## Règles des combats du mode Histoire (écrites en texte dans StoryData).
+const STORY_RULES := {
+	"duel": MatchFlow.Rule.DUEL, "boss": MatchFlow.Rule.BOSS, "survival": MatchFlow.Rule.SURVIVAL,
+}
+## Soin entre deux phases de boss ou deux vagues : 20 % de la vie.
+const NEXT_WAVE_HEAL := 0.2
 ## Largeur minimale entre les centres des deux combattants.
 const PUSHBOX_WIDTH := 20.0
 ## Limites de l'arène pour le centre des combattants.
@@ -104,11 +110,11 @@ func _ready() -> void:
 		fighter.attack_started.connect(feedback.attack_started)
 	pause_menu.restart_requested.connect(restart)
 	pause_menu.mode_toggled.connect(toggle_training)
-	pause_menu.menu_requested.connect(GameState.go_to.bind(GameState.MAIN_MENU))
+	pause_menu.menu_requested.connect(_back_to_menu)
 	pause_menu.can_toggle_mode = GameState.mode == GameState.Mode.QUICK
-	match_result.next_requested.connect(_next_arcade_fight)
+	match_result.next_requested.connect(_on_next_requested)
 	match_result.retry_requested.connect(start_match)
-	match_result.menu_requested.connect(GameState.go_to.bind(GameState.MAIN_MENU))
+	match_result.menu_requested.connect(_back_to_menu)
 	tools.setup(player, dummy)
 	_setup_from_menus()
 	touch_controls.fighter = player
@@ -144,12 +150,21 @@ func _setup_from_menus() -> void:
 			player.data = GameState.player_fighter
 			player.support = GameState.player_support
 			dummy.data = GameState.opponent_fighter
-	if GameState.mode in [GameState.Mode.ARCADE, GameState.Mode.TRAINING]:
+		GameState.Mode.STORY:
+			# Pas de soutien en Histoire : le récit décide qui se bat.
+			player.data = GameState.player_fighter
+			player.support = null
+			dummy.data = GameState.opponent_fighter
+			dummy.support = null
+			var spec := GameState.story_fight
+			flow.configure(STORY_RULES.get(spec.get("rule", "duel"), MatchFlow.Rule.DUEL),
+					spec.get("phases", spec.get("waves", 1)), spec.get("seconds", 60))
+	if GameState.mode in [GameState.Mode.ARCADE, GameState.Mode.TRAINING, GameState.Mode.STORY]:
 		tools.ai = FighterAI.new(GameState.difficulty)
 		tools.dummy_mode = TrainingTools.DummyMode.AI
-	# En Arcade et dans le tutoriel, pas d'outils de test (touches du mannequin,
-	# texte de débogage, zones de frappe).
-	var clean := arcade or GameState.mode == GameState.Mode.TUTORIAL
+	# En Arcade, en Histoire et dans le tutoriel, pas d'outils de test (touches du
+	# mannequin, texte de débogage, zones de frappe).
+	var clean := arcade or GameState.mode in [GameState.Mode.TUTORIAL, GameState.Mode.STORY]
 	tools.set_process_unhandled_input(not clean)
 	tools.debug_label.visible = not clean
 	# Zones de frappe (rouge) et vulnérables (vert) : seulement pour régler les coups
@@ -258,9 +273,32 @@ func start_match() -> void:
 
 
 ## Nouvelle manche : tout repart à zéro (vie pleine, énergie vide, soutien prêt).
+## Phase de boss ou vague suivante : le joueur garde sa vie (un peu soignée) et
+## son énergie, l'adversaire revient plus fort.
 func _on_round_started() -> void:
-	_reset_fighters(0.0)
+	if flow.is_next_wave():
+		var health := mini(Fighter.MAX_HEALTH, player.health + int(Fighter.MAX_HEALTH * NEXT_WAVE_HEAL))
+		var energy := player.energy
+		_reset_fighters(0.0)
+		player.health = health
+		player.energy = energy
+		var level := mini(GameState.difficulty + _difficulty_step(), FighterAI.Difficulty.HARD)
+		tools.ai = FighterAI.new(level as FighterAI.Difficulty)
+		# Le boss commence chaque nouvelle phase avec plus d'énergie (plus de spéciaux).
+		if flow.rule == MatchFlow.Rule.BOSS:
+			dummy.energy = Fighter.ENERGY_SEGMENT * (flow.round_number - 1)
+	else:
+		_reset_fighters(0.0)
+		if GameState.mode == GameState.Mode.STORY:
+			tools.ai = FighterAI.new(GameState.difficulty)
 	feedback.round_started()
+
+
+## De combien l'IA monte en difficulté : +1 par phase de boss, +1 toutes les 2 vagues.
+func _difficulty_step() -> int:
+	if flow.rule == MatchFlow.Rule.BOSS:
+		return flow.round_number - 1
+	return (flow.round_number - 1) / 2
 
 
 func _on_round_ended(by_ko: bool) -> void:
@@ -287,10 +325,17 @@ func _reset_fighters(energy: float) -> void:
 
 
 ## Fin du combat. En Arcade : le journal, puis la fenêtre de résultat.
+## En Histoire : la fenêtre « Continuer / Réessayer ».
+## Un adversaire battu devient un soutien possible.
 func _on_match_over() -> void:
+	if flow.player_won() and GameState.mode in [GameState.Mode.ARCADE, GameState.Mode.STORY]:
+		GameState.story.record_defeat(dummy.data)
+	if GameState.mode == GameState.Mode.STORY:
+		match_result.show_story(flow.player_won(), tr(GameState.story.current_chapter().get("title", "")))
+		return
 	if GameState.mode != GameState.Mode.ARCADE:
 		return
-	var result := "win" if flow.player_won() else ("loss" if flow.dummy_wins >= MatchFlow.ROUNDS_TO_WIN and flow.player_wins < MatchFlow.ROUNDS_TO_WIN else "draw")
+	var result := "win" if flow.player_won() else ("loss" if flow.player_lost() else "draw")
 	# Pendant les tests automatiques, on n'écrit pas dans le vrai journal.
 	if not GameState.dry_run:
 		match_log.write(FighterAI.Difficulty.keys()[GameState.difficulty], result, "%d-%d" % [flow.player_wins, flow.dummy_wins])
@@ -315,11 +360,19 @@ func _apply_control_settings() -> void:
 		fighter.show_markers = GameState.attack_markers
 
 
-## Arcade : combat gagné, on passe au suivant (ou c'est la fin de la série).
-func _next_arcade_fight() -> void:
-	if GameState.next_arcade_fight():
+## Combat gagné : en Arcade on passe au suivant (ou c'est la fin de la série),
+## en Histoire on passe à l'étape suivante du chapitre.
+func _on_next_requested() -> void:
+	if GameState.mode == GameState.Mode.STORY:
+		GameState.story_next()
+	elif GameState.next_arcade_fight():
 		_setup_from_menus()
 		start_match()
+
+
+## Le bouton Menu : la carte des chapitres en Histoire, sinon le menu principal.
+func _back_to_menu() -> void:
+	GameState.go_to(GameState.STORY_MAP if GameState.mode == GameState.Mode.STORY else GameState.MAIN_MENU)
 
 
 # --- Collisions et coups -----------------------------------------------------
@@ -568,6 +621,8 @@ func _update_hud() -> void:
 	var header := ""
 	if GameState.mode == GameState.Mode.ARCADE:
 		header = tr("ARCADE_FIGHT_N") % [GameState.arcade_index + 1, GameState.arcade_opponents.size()]
+	elif GameState.mode == GameState.Mode.STORY:
+		header = tr(GameState.story_fight.get("intro", ""))
 	var footer := tr("FIGHT_PRESS_RESTART") if GameState.mode == GameState.Mode.QUICK else ""
 	hud.refresh(player, dummy, flow.player_wins, flow.dummy_wins, not training,
 			-1 if training else flow.timer_frames, "" if training else flow.announce_text(header, footer))

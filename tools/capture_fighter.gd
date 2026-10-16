@@ -20,6 +20,7 @@ func _initialize() -> void:
 	await process_frame
 	gs.dry_run = true
 	gs.reset_settings("user://capture_settings.cfg")
+	gs.story.reset("user://capture_progress.cfg", true)
 	gs.forced_stage = stage_id
 	gs.start_training(gs.roster[index], gs.roster[2], gs.roster[foe], FighterAI.Difficulty.NORMAL)
 	fight = load("res://scenes/fight/fight.tscn").instantiate()

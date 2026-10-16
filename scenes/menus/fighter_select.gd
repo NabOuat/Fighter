@@ -48,8 +48,11 @@ func _ready() -> void:
 	var fighter_group := ButtonGroup.new()
 	var support_group := ButtonGroup.new()
 	var opponent_group := ButtonGroup.new()
+	# Jouables : les débloqués. Soutiens et adversaires d'entraînement : aussi ceux
+	# qu'on a déjà battus (règle du cahier des charges).
 	for data in GameState.playable_roster():
 		_fighter_cards[data] = _add_card(fighter_cards, data, CARD_SIZE, fighter_group, select_fighter)
+	for data in GameState.support_roster():
 		_support_cards[data] = _add_card(support_cards, data, SMALL_CARD_SIZE, support_group, select_support)
 		_opponent_cards[data] = _add_card(opponent_cards, data, SMALL_CARD_SIZE, opponent_group, select_opponent)
 	var difficulty_group := ButtonGroup.new()
@@ -66,9 +69,10 @@ func _ready() -> void:
 	var heroes := GameState.playable_roster()
 	var first: FighterData = GameState.player_fighter if GameState.player_fighter in heroes else heroes[0]
 	select_fighter(first)
-	if GameState.player_support in heroes and GameState.player_support != first:
+	if GameState.player_support in _support_cards and GameState.player_support != first:
 		select_support(GameState.player_support)
-	select_opponent(heroes[(heroes.find(first) + 1) % heroes.size()])
+	var foes := GameState.support_roster()
+	select_opponent(foes[(foes.find(first) + 1) % foes.size()])
 	select_difficulty(difficulty)
 	focus_first(fight_button)
 
@@ -129,7 +133,9 @@ func select_fighter(data: FighterData) -> void:
 	for other in _support_cards:
 		_support_cards[other].disabled = other == data
 	if support == null or support == data:
-		for other in GameState.playable_roster():
+		support = null
+		assist_label.text = tr("SELECT_NO_SUPPORT")
+		for other in _support_cards:
 			if other != data:
 				select_support(other)
 				break

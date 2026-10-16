@@ -16,6 +16,7 @@ var failures := 0
 
 ## Les réglages des tests : jamais ceux du joueur (ni lus, ni écrits).
 const TEST_SETTINGS_PATH := "user://test_settings.cfg"
+const TEST_PROGRESS_PATH := "user://test_progress.cfg"
 
 
 ## GameState (autoload) finit de démarrer à la première frame ; ensuite on lui
@@ -24,6 +25,8 @@ func use_test_settings() -> Node:
 	await process_frame
 	var gs: Node = root.get_node("GameState")
 	gs.reset_settings(TEST_SETTINGS_PATH)
+	# Progression neutre, tout débloqué (jamais celle du joueur).
+	gs.story.reset(TEST_PROGRESS_PATH, true)
 	return gs
 
 
@@ -92,7 +95,8 @@ func finish() -> void:
 	# Fermeture propre : on libère l'arène, puis on laisse au moteur audio (qui
 	# tourne à part, en temps réel) le temps de libérer les sons arrêtés.
 	paused = false
-	fight.queue_free()
+	if fight:
+		fight.queue_free()
 	for i in 10:
 		OS.delay_msec(20)
 		await process_frame

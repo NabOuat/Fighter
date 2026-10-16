@@ -86,7 +86,10 @@ func _unhandled_input(event: InputEvent) -> void:
 ## Texte de débogage pour le développeur, absent du jeu final
 ## (c'est pour ça qu'il n'est pas dans le fichier de traductions).
 func show_debug(status: String) -> void:
+	if not debug_label.visible:
+		return
+	var support: String = String(_player.support.id) if _player.support else "-"
 	debug_label.text = "%s | P1 %s E%d [T: %s] | Dummy [%s %s] | M mode 1-8 dummy Y IA R reset" % [
-		status, Fighter.State.keys()[_player.state], int(_player.energy), _player.support.id,
+		status, Fighter.State.keys()[_player.state], int(_player.energy), support,
 		DummyMode.keys()[dummy_mode], FighterAI.Difficulty.keys()[ai.difficulty],
 	]

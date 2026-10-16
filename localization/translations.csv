@@ -190,3 +190,66 @@ STAGE_KUMASI_NUIT,cour royale de Kumasi,Kumasi royal courtyard
 STAGE_SAVANE_ITSA,savane d'Itsa,Itsa's savanna
 STAGE_COMOE_CRUE,la Comoé en crue,the Comoé in flood
 STAGE_FORET_DEPART,forêt du départ,forest of departure
+STORY_MAP_TITLE,L'Exode de la reine Pokou,The Exodus of Queen Pokou
+STORY_CHAPTER_N,Chapitre %d,Chapter %d
+STORY_LOCKED,Verrouillé,Locked
+STORY_DONE,Terminé,Completed
+STORY_NEW,À jouer,To play
+STORY_TAP,Touche l'écran pour continuer,Tap to continue
+STORY_SKIP,Passer,Skip
+STORY_CHAPTER_DONE,Chapitre terminé,Chapter complete
+STORY_UNLOCK_SUPPORT,Nouveau soutien : %s,New support: %s
+STORY_UNLOCK_PLAYABLE,Nouveau personnage jouable : %s,New playable character: %s
+STORY_CONTINUE,Continuer,Continue
+STORY_RETRY,Réessayer,Try again
+STORY_BACK_MAP,Carte des chapitres,Chapter map
+STORY_LOSS,Le récit s'interrompt…,The tale is interrupted…
+STORY_WIN,Victoire !,Victory!
+SELECT_NO_SUPPORT,Soutien : aucun pour l'instant,Support: none yet
+FIGHT_PHASE,Phase %d / %d,Phase %d / %d
+FIGHT_WAVE,Vague %d / %d,Wave %d / %d
+FIGHT_SURVIVE,Tiens jusqu'à l'aube !,Hold until dawn!
+FIGHT_DAWN,L'aube se lève !,Dawn breaks!
+STORY_FIGHT_SPARRING,Duel d'entraînement,Sparring duel
+STORY_FIGHT_ITSA_WAR,La guerre de succession,The succession war
+STORY_FIGHT_DAWN,Protège le départ,Protect the departure
+STORY_FIGHT_ITSA_BOSS,Itsa barre la route,Itsa blocks the way
+STORY_FIGHT_GENIE,Le regard du génie,The spirit's gaze
+FIGHTER_GUERRIER_NAME,Guerrier d'Itsa,Itsa's warrior
+FIGHTER_GENIE_NAME,Génie de la Comoé,Spirit of the Comoé
+STORY_CH1_TITLE,La cité de l'or,The city of gold
+STORY_CH2_TITLE,L'héritier écarté,The heir set aside
+STORY_CH3_TITLE,La nuit du départ,The night of departure
+STORY_CH4_TITLE,Celui qu'on nomme Itsa,The one they call Itsa
+STORY_CH5_TITLE,L'épreuve du génie,The spirit's trial
+STORY_CH6_TITLE,Le fleuve,The river
+STORY_CH7_TITLE,Les héritières,The heirs
+STORY_GRIOT,"Approchez, enfants. Les anciens ne racontent pas tous la même chose… Mais écoutez l'histoire de la reine Abla Pokou.","Come closer, children. The elders do not all tell it the same way… But listen to the story of Queen Abla Pokou."
+STORY_CH1_1,"Au temps de nos ancêtres, Kumasi brillait de l'or de ses forges, au cœur du royaume ashanti.","In our ancestors' time, Kumasi shone with the gold of its forges, at the heart of the Ashanti kingdom."
+STORY_CH1_2,"Le Tabouret d'or, âme du peuple ashanti, ne touchait jamais le sol.","The Golden Stool, soul of the Ashanti people, never touched the ground."
+STORY_CH1_3,"Mais vers 1717, des guerriers venus d'Aowin envahirent la ville. La reine-mère se dressa devant eux.","But around 1717, warriors from Aowin invaded the city. The queen mother stood before them."
+STORY_CH1_4,Le jeune Opoku Ware leva son épée. Il repoussa l'ennemi et devint un grand roi.,Young Opoku Ware raised his sword. He drove the enemy back and became a great king.
+STORY_CH2_1,"Bien des années plus tard, le vieux roi désigna son héritier : Dakon, frère de Pokou selon la tradition.","Many years later, the old king named his heir: Dakon, Pokou's brother according to tradition."
+STORY_CH2_2,Mais les anciens choisirent un autre nom. Le royaume se divisa.,But the elders chose another name. The kingdom split apart.
+STORY_CH2_3,"Dans la nuit, Pokou et son frère parlaient à voix basse de ce qui allait venir.","In the night, Pokou and her brother spoke softly of what was to come."
+STORY_CH2_4,"Dakon resta seul face aux torches. Certains disent qu'on le tua, d'autres qu'il préféra la mort à la honte.","Dakon stood alone before the torches. Some say he was killed, others that he chose death over shame."
+STORY_CH3_1,Alors Pokou noua son dernier bracelet d'or. Il fallait partir.,So Pokou tied on her last gold bracelet. They had to leave.
+STORY_CH3_2,"Les familles fidèles la suivirent dans la nuit, avec leurs bannières.","The loyal families followed her into the night, with their banners."
+STORY_CH3_3,"Derrière eux, Kumasi grondait. Les poursuivants n'allaient pas tarder.","Behind them, Kumasi rumbled. The pursuers would soon come."
+STORY_CH3_4,"Tano, son époux selon une tradition, menait la colonne. Il fallait tenir jusqu'à l'aube.","Tano, her husband according to one tradition, led the column. They had to hold until dawn."
+STORY_CH4_1,"À l'aube, la savane s'ouvrit devant eux. Mais des traces dans la boue les suivaient.","At dawn, the savanna opened before them. But tracks in the mud were following them."
+STORY_CH4_2,Un vieux chef couvert d'amulettes sortit de la forêt : celui que certains conteurs nomment Itsa.,An old chief covered in amulets came out of the forest: the one some storytellers call Itsa.
+STORY_CH4_3,La jeune Akwa Boni ramassa une lance. Le peuple ne fuirait plus.,Young Akwa Boni picked up a spear. The people would run no more.
+STORY_CH4_OUTRO,Itsa se replia vers la forêt : « La rivière les arrêtera. »,Itsa fell back toward the forest: “The river will stop them.”
+STORY_CH5_1,"Devant eux, la Comoé était en crue. Impossible de traverser.","Before them, the Comoé was in flood. There was no way across."
+STORY_CH5_2,Le devin traça un cercle de kaolin et frappa son gong de fer.,The diviner drew a circle of kaolin and struck his iron gong.
+STORY_CH5_3,"Pokou entra seule dans le cercle, pour soutenir le regard du génie du fleuve.","Pokou stepped alone into the circle, to meet the gaze of the river spirit."
+STORY_CH5_OUTRO,Le génie parla : le prix du passage serait ce que le peuple avait de plus cher.,The spirit spoke: the price of crossing would be what the people held most dear.
+STORY_CH6_1,Les mains de la reine défirent un petit bijou d'or.,The queen's hands untied a small gold jewel.
+STORY_CH6_2,Un seul cercle d'ondes sur l'eau. Puis le silence.,A single circle of ripples on the water. Then silence.
+STORY_CH6_3,"Certains disent qu'un fromager se pencha d'une rive à l'autre ; d'autres, que des hippopotames firent un pont.","Some say a kapok tree bent from one bank to the other; others, that hippopotamuses made a bridge."
+STORY_CH6_4,"Sur l'autre rive, la reine murmura : « Ba-ouli », l'enfant est mort. De ce mot vient, dit-on, le nom Baoulé.","On the far bank, the queen whispered: “Ba-ouli”, the child is dead. From this word, it is said, comes the name Baoulé."
+STORY_CH7_1,"Dans la savane, des villages naquirent. Le peuple baoulé était né.","In the savanna, villages were born. The Baoulé people were born."
+STORY_CH7_2,"Devenue âgée, Pokou confia un bracelet d'or à sa nièce, Akwa Boni.","Grown old, Pokou entrusted a gold bracelet to her niece, Akwa Boni."
+STORY_CH7_3,"Akwa Boni regarda vers l'ouest, au-delà du Bandama. L'histoire continuait.","Akwa Boni looked west, beyond the Bandama. The story went on."
+STORY_CH7_4,"Quand Akwa Boni mourut, on la ramena chez elle. Ce lieu, on l'appela Sakassou.","When Akwa Boni died, she was carried home. That place was named Sakassou."

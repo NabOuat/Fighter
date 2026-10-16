@@ -1,0 +1,155 @@
+[gd_resource type="Resource" script_class="FighterData" format=3]
+
+[ext_resource type="Script" path="res://data/attack_data.gd" id="1_lvsbw"]
+[ext_resource type="Script" path="res://data/assist_data.gd" id="2_2xwg1"]
+[ext_resource type="Script" path="res://data/fighter_data.gd" id="3_ct1fi"]
+[ext_resource type="Script" path="res://data/projectile_data.gd" id="4_yowap"]
+
+[sub_resource type="Resource" id="Resource_fegt7"]
+script = ExtResource("1_lvsbw")
+active = 40
+recovery = 0
+damage = 60
+hit_level = 0
+hitstun = 18
+blockstun = 12
+hitbox = Rect2(0, -24, 26, 22)
+
+[sub_resource type="Resource" id="Resource_n3x3j"]
+script = ExtResource("2_2xwg1")
+kind = 2
+
+[sub_resource type="Resource" id="Resource_hr46b"]
+script = ExtResource("1_lvsbw")
+recovery = 10
+
+[sub_resource type="Resource" id="Resource_aerai"]
+script = ExtResource("1_lvsbw")
+startup = 5
+recovery = 12
+damage = 45
+hitstun = 18
+blockstun = 12
+pushback = 100.0
+hitbox = Rect2(6, -40, 24, 10)
+
+[sub_resource type="Resource" id="Resource_t2ybg"]
+script = ExtResource("1_lvsbw")
+startup = 8
+active = 4
+recovery = 20
+damage = 70
+hitstun = 20
+blockstun = 14
+pushback = 160.0
+knockdown = true
+hitstop = 8
+launch = 330.0
+hitbox = Rect2(6, -36, 30, 14)
+
+[sub_resource type="Resource" id="Resource_djtkd"]
+script = ExtResource("1_lvsbw")
+startup = 6
+recovery = 14
+damage = 50
+hit_level = 2
+pushback = 80.0
+hitbox = Rect2(4, -12, 28, 10)
+
+[sub_resource type="Resource" id="Resource_2dhop"]
+script = ExtResource("1_lvsbw")
+startup = 1
+active = 1
+recovery = 0
+damage = 80
+hitstun = 20
+blockstun = 16
+pushback = 140.0
+hitstop = 7
+chip_damage = 15
+hitbox = Rect2(0, 0, 0, 0)
+
+[sub_resource type="Resource" id="Resource_hbvhq"]
+script = ExtResource("4_yowap")
+hit = SubResource("Resource_2dhop")
+size = Vector2(26, 18)
+color = Color(0.35, 0.85, 0.9, 1)
+
+[sub_resource type="Resource" id="Resource_vvuse"]
+script = ExtResource("1_lvsbw")
+startup = 12
+active = 1
+recovery = 22
+damage = 0
+hitstun = 18
+blockstun = 14
+pushback = 120.0
+hitstop = 6
+energy_cost = 100
+projectile = SubResource("Resource_hbvhq")
+hitbox = Rect2(0, 0, 0, 0)
+
+[sub_resource type="Resource" id="Resource_5vhim"]
+script = ExtResource("1_lvsbw")
+startup = 6
+active = 14
+recovery = 16
+damage = 90
+hitstun = 22
+blockstun = 18
+pushback = 180.0
+knockdown = true
+hitstop = 8
+energy_cost = 100
+chip_damage = 15
+dash_speed = 260.0
+hitbox = Rect2(-4, -46, 30, 40)
+
+[sub_resource type="Resource" id="Resource_gchwd"]
+script = ExtResource("1_lvsbw")
+startup = 3
+active = 2
+recovery = 24
+damage = 110
+hitstun = 20
+pushback = 130.0
+knockdown = true
+hitstop = 9
+is_throw = true
+hitbox = Rect2(4, -44, 24, 44)
+
+[sub_resource type="Resource" id="Resource_3gx77"]
+script = ExtResource("1_lvsbw")
+startup = 10
+active = 8
+recovery = 30
+damage = 300
+hitstun = 30
+blockstun = 26
+pushback = 220.0
+knockdown = true
+hitstop = 15
+energy_cost = 400
+chip_damage = 40
+dash_speed = 300.0
+invulnerable_startup = true
+is_ultimate = true
+hitbox = Rect2(-6, -54, 42, 54)
+
+[resource]
+script = ExtResource("3_ct1fi")
+id = &"genie_comoe"
+name_key = "FIGHTER_GENIE_NAME"
+power = 4
+defense = 4
+speed = 2
+reach = 2
+combo = Array[ExtResource("1_lvsbw")]([SubResource("Resource_hr46b"), SubResource("Resource_aerai"), SubResource("Resource_t2ybg")])
+low_attack = SubResource("Resource_djtkd")
+air_attack = SubResource("Resource_fegt7")
+throw = SubResource("Resource_gchwd")
+special_1 = SubResource("Resource_vvuse")
+special_2 = SubResource("Resource_5vhim")
+ultimate = SubResource("Resource_3gx77")
+assist = SubResource("Resource_n3x3j")
+placeholder_color = Color(0.25, 0.72, 0.78, 1)
