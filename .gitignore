@@ -11,3 +11,7 @@ __pycache__/
 
 # Dossiers de travail des outils de génération d'images (copies des décors)
 /output/
+
+# Salon en ligne (Cloudflare)
+server/node_modules/
+server/.wrangler/
