@@ -14,6 +14,7 @@
 [ext_resource type="Script" path="res://scenes/fight/match_flow.gd" id="14_flow"]
 [ext_resource type="Script" path="res://scenes/fight/fight_feedback.gd" id="15_feedback"]
 [ext_resource type="Script" path="res://scenes/fight/match_log.gd" id="16_log"]
+[ext_resource type="Script" path="res://scenes/fight/stage.gd" id="17_stage"]
 
 [sub_resource type="RectangleShape2D" id="Shape_floor"]
 size = Vector2(480, 40)
@@ -32,6 +33,9 @@ offset_right = 480.0
 offset_bottom = 270.0
 mouse_filter = 2
 color = Color(0.16, 0.09, 0.22, 1)
+
+[node name="Stage" type="Node2D" parent="."]
+script = ExtResource("17_stage")
 
 [node name="Floor" type="StaticBody2D" parent="."]
 position = Vector2(240, 250)

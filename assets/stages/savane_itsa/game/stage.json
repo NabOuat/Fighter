@@ -1,0 +1,15 @@
+{
+ "stage": "savane_itsa",
+ "layers": [
+  "back",
+  "ground",
+  "middle"
+ ],
+ "middle_shift": -3,
+ "ground_top": 572,
+ "size": [
+  840,
+  281
+ ],
+ "ground_top_game": 222
+}

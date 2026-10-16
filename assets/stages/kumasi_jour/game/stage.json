@@ -1,0 +1,15 @@
+{
+ "stage": "kumasi_jour",
+ "layers": [
+  "back",
+  "ground",
+  "middle"
+ ],
+ "middle_shift": 6,
+ "ground_top": 579,
+ "size": [
+  840,
+  281
+ ],
+ "ground_top_game": 224
+}

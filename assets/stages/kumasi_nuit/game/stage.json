@@ -1,0 +1,15 @@
+{
+ "stage": "kumasi_nuit",
+ "layers": [
+  "back",
+  "ground",
+  "middle"
+ ],
+ "middle_shift": 16,
+ "ground_top": 580,
+ "size": [
+  840,
+  281
+ ],
+ "ground_top_game": 225
+}

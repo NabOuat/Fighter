@@ -1,0 +1,15 @@
+{
+ "stage": "comoe_crue",
+ "layers": [
+  "back",
+  "ground",
+  "middle"
+ ],
+ "middle_shift": -15,
+ "ground_top": 590,
+ "size": [
+  840,
+  281
+ ],
+ "ground_top_game": 229
+}

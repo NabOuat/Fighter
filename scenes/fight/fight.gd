@@ -83,6 +83,7 @@ var art_camera := false
 @onready var pause_menu: PauseMenu = $PauseMenu
 @onready var match_result: MatchResult = $MatchResult
 @onready var camera: Camera2D = $Camera
+@onready var stage: Stage = $Stage
 
 
 func _ready() -> void:
@@ -156,7 +157,11 @@ func _setup_from_menus() -> void:
 	for fighter in fighters:
 		fighter.show_boxes = GameState.mode == GameState.Mode.QUICK
 	hud.show_names(player, dummy)
-	art_camera = player.data.sprite_frames != null or dummy.data.sprite_frames != null
+	# Le décor dessiné du combat (sinon, le fond uni du prototype).
+	var has_stage := stage.load_stage(GameState.stage_for_fight(dummy.data), FLOOR_Y)
+	$Background.visible = not has_stage
+	$Floor/View.visible = not has_stage
+	art_camera = has_stage or player.data.sprite_frames != null or dummy.data.sprite_frames != null
 	camera.zoom = Vector2.ONE * (ART_ZOOM if art_camera else 1.0)
 	_update_camera(true)
 
@@ -344,11 +349,13 @@ func _separate_fighters() -> void:
 func _update_camera(snap := false) -> void:
 	if not art_camera:
 		camera.position = SCREEN_SIZE / 2.0
+		stage.scroll(camera.position.x)
 		return
 	var half := SCREEN_SIZE / ART_ZOOM / 2.0
 	var middle := (player.position.x + dummy.position.x) / 2.0
 	var target := Vector2(clampf(middle, half.x, SCREEN_SIZE.x - half.x), FLOOR_Y + SCREEN_MARGIN - half.y)
 	camera.position = target if snap else camera.position.lerp(target, CAMERA_FOLLOW)
+	stage.scroll(camera.position.x)
 
 
 func _resolve_hits() -> void:

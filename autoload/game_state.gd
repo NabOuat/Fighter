@@ -98,6 +98,34 @@ func go_to(scene_path: String) -> void:
 	get_tree().change_scene_to_file.call_deferred(scene_path)
 
 
+## Décor de chaque personnage quand on l'affronte en Arcade (son « terrain »).
+const HOME_STAGES := {
+	&"abla_pokou": "comoe_crue", &"dakon": "kumasi_nuit", &"itsa": "savane_itsa",
+}
+## Décor de l'entraînement et du tutoriel.
+const TRAINING_STAGE := "village_aube"
+
+## Décor imposé (chapitre du mode Histoire, outils de capture). Vide = choix automatique.
+var forced_stage := ""
+
+
+## Le décor du prochain combat ("" = fond uni du prototype, pour l'arène lancée seule).
+func stage_for_fight(opponent: FighterData) -> String:
+	if forced_stage != "":
+		return forced_stage
+	match mode:
+		Mode.TRAINING, Mode.TUTORIAL:
+			return TRAINING_STAGE
+		Mode.ARCADE:
+			var home: String = HOME_STAGES.get(opponent.id, "")
+			if home != "" and Stage.exists(home):
+				return home
+			# Les autres : un décor existant, différent à chaque combat de la série.
+			var all := ["kumasi_jour", "kumasi_nuit", "savane_itsa", "comoe_crue", "village_aube"].filter(Stage.exists)
+			return all[arcade_index % all.size()] if not all.is_empty() else ""
+	return ""
+
+
 ## Prépare une partie d'Arcade : 6 adversaires tirés du roster, chacun avec un soutien.
 func start_arcade(fighter: FighterData, support: FighterData, level: FighterAI.Difficulty, seed := 0) -> void:
 	mode = Mode.ARCADE
