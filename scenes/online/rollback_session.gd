@@ -27,6 +27,10 @@ const CHECKSUM_INTERVAL := 60
 ## Au plus tant de commandes renvoyées par message (les plus anciennes sont
 ## renvoyées tant que l'autre n'a pas confirmé les avoir reçues).
 const MAX_INPUTS_PER_PACKET := 60
+## Un message ne peut pas annoncer des commandes plus loin que ça dans le futur
+## (10 secondes), ni plus de MAX_SUMS_PER_PACKET empreintes.
+const MAX_FUTURE_FRAMES := 600
+const MAX_SUMS_PER_PACKET := 8
 ## Avance maximale tolérée sur l'autre joueur avant de ralentir (en frames).
 const MAX_FRAME_ADVANTAGE := 2
 ## Après une attente pour se recaler, au moins tant de frames avant la suivante.
@@ -171,13 +175,13 @@ func is_valid_packet(packet: Variant) -> bool:
 		if not (value is int or value is float) or absf(value) > 1e9 or value != floorf(value):
 			return false
 	var bits: Variant = packet.get("i")
-	if not bits is Array or bits.size() > MAX_INPUTS_PER_PACKET or int(packet.f) < 0:
+	if not bits is Array or bits.size() > MAX_INPUTS_PER_PACKET or int(packet.f) < 0 			or int(packet.f) + bits.size() > frame + MAX_FUTURE_FRAMES:
 		return false
 	for value in bits:
 		if not (value is int or value is float) or value < 0 or value >= 1 << NetInput.KEYS.size() or value != floorf(value):
 			return false
 	if packet.has("s"):
-		if not packet.s is Dictionary:
+		if not packet.s is Dictionary or packet.s.size() > MAX_SUMS_PER_PACKET:
 			return false
 		for key in packet.s:
 			var sum: Variant = packet.s[key]

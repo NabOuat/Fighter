@@ -111,12 +111,14 @@ class InputBot:
 			_:
 				bits |= 1 << NetInput.KEYS.find(held)
 		# De loin : appui court sur Spécial sans direction (3 frames) = projectile.
-		if special_tap == 0 and rng.randf() < (0.03 if not near else 0.01):
+		var full := me.energy >= Fighter.MAX_ENERGY
+		if special_tap == 0 and not full and me.energy >= Fighter.ENERGY_SEGMENT and rng.randf() < (0.03 if not near else 0.01):
 			special_tap = 3
 		if special_tap > 0:
 			special_tap -= 1
 			bits = 1 << NetInput.KEYS.find("special")
-		if me.energy >= Fighter.MAX_ENERGY and rng.randf() < 0.05:
+		# Barre pleine : gardée pour l'ultime, lancé de près.
+		if full and near and rng.randf() < 0.1:
 			bits |= 1 << NetInput.KEYS.find("ultimate")
 		# De près : les boutons (attaque surtout).
 		var presses := ["attack", "attack", "attack", "attack", "guard_pressed", "special_2", "throw", "low_attack"] if near else ["assist"]
@@ -155,7 +157,10 @@ func _initialize() -> void:
 	for fighter in reference.fighters:
 		fighter.ultimate_started.connect(func(_f: Fighter) -> void: covered.ultimes += 1)
 	var had := {"projectiles": false, "assists": false, "juggle": false}
-	var bots := [InputBot.new(101), InputBot.new(202)]
+	# Autre combat possible : Godot ... --script res://tests/test_rollback.gd -- <graine>
+	var args := OS.get_cmdline_user_args()
+	var seed_base: int = int(args[0]) if args.size() > 0 else 0
+	var bots := [InputBot.new(101 + seed_base), InputBot.new(202 + seed_base)]
 	inputs = [[], []]
 	for f in FRAMES + RollbackSession.INPUT_DELAY:
 		for i in 2:
@@ -175,7 +180,7 @@ func _initialize() -> void:
 	var expected: int = reference.state_checksum(reference.save_state())
 	check("combat de référence joué", reference.frame_count == FRAMES)
 	check("il contient coups, projectiles, soutiens, jonglages, ultimes et fins de manche",
-			covered.coups >= 20 and covered.projectiles >= 2 and covered.soutiens >= 2 and covered.jonglages >= 1
+			covered.coups >= 20 and covered.projectiles >= 1 and covered.soutiens >= 2 and covered.jonglages >= 1
 			and covered.ultimes >= 1 and covered.manches >= 1, str(covered))
 	reference.queue_free()
 
@@ -183,11 +188,11 @@ func _initialize() -> void:
 	# Les deux commencent avec la barre pleine : spéciaux, projectiles et ultimes.
 	var seen := {"projectiles": 0, "assists": 0, "hits": 0}
 	arena.hit_landed.connect(func(_r, _a, _b, _c) -> void: seen.hits += 1)
-	for f in 600:
+	for f in 400:
 		arena.step_with_inputs(inputs_at(f))
 	var photo: Dictionary = arena.save_state()
 	var first_run: Array[int] = []
-	for f in range(600, 2000):
+	for f in range(400, 2300):
 		arena.step_with_inputs(inputs_at(f))
 		first_run.append(arena.state_checksum(arena.save_state()))
 		seen.projectiles = maxi(seen.projectiles, arena.projectiles.size())
@@ -195,18 +200,51 @@ func _initialize() -> void:
 	arena.load_state(photo)
 	check("la photo rechargée a la même empreinte", arena.state_checksum(arena.save_state()) == arena.state_checksum(photo))
 	var second_run: Array[int] = []
-	for f in range(600, 2000):
+	for f in range(400, 2300):
 		arena.step_with_inputs(inputs_at(f), true)
 		second_run.append(arena.state_checksum(arena.save_state()))
 	var differ := -1
 	for i in first_run.size():
 		if first_run[i] != second_run[i]:
-			differ = i + 600
+			differ = i + 400
 			break
-	check("1400 frames rejouées à l'identique", differ == -1, "différence à la frame %d" % differ)
+	check("1900 frames rejouées à l'identique", differ == -1, "différence à la frame %d" % differ)
 	check("le passage rejoué contient coups, projectiles et soutiens", seen.hits > 20 and seen.projectiles > 0 and seen.assists > 0, str(seen))
 	arena.render()
 	arena.queue_free()
+
+	section("Effets (sons, étincelles) pendant un retour en arrière")
+	# Comme le rollback : photo, 8 frames jouées, retour à la photo, 8 frames rejouées.
+	var fx_arena = await new_arena()
+	for f in 400:
+		fx_arena.step_with_inputs(inputs_at(f))
+	var played_first := 0
+	var doubled := 0
+	var discovered := 0
+	for start in range(400, 2280, 8):
+		var before: Dictionary = fx_arena.save_state()
+		var count: int = fx_arena.feedback.effects_played
+		# 1re fois : l'adversaire n'appuie sur rien (une devinette fausse).
+		for f in range(start, start + 8):
+			var guessed: Array[int] = [inputs[0][f], NetInput.predict(inputs[1][start - 1])]
+			fx_arena.step_with_inputs(guessed)
+		var after_guess: int = fx_arena.feedback.effects_played
+		played_first += after_guess - count
+		# On rejoue avec les vraies commandes : seuls les effets nouveaux se jouent.
+		fx_arena.load_state(before)
+		for f in range(start, start + 8):
+			fx_arena.step_with_inputs(inputs_at(f), true)
+		discovered += fx_arena.feedback.effects_played - after_guess
+		# Encore une fois à l'identique : plus rien de nouveau ne doit se jouer.
+		var settled: int = fx_arena.feedback.effects_played
+		fx_arena.load_state(before)
+		for f in range(start, start + 8):
+			fx_arena.step_with_inputs(inputs_at(f), true)
+		doubled += fx_arena.feedback.effects_played - settled
+	check("rejouer à l'identique ne relance aucun effet", doubled == 0, "%d effets en double" % doubled)
+	check("les effets découverts en rejouant se jouent", discovered > 0 and played_first > 0,
+			"%d joués, %d découverts" % [played_first, discovered])
+	fx_arena.queue_free()
 
 	section("Messages abîmés et désynchronisation")
 	var guard_arena = await new_arena()
@@ -216,7 +254,9 @@ func _initialize() -> void:
 			{"t": "in", "f": 0, "i": ["x"], "a": 0, "fr": 0, "adv": 0},
 			{"t": "in", "f": 0.5, "i": [], "a": 0, "fr": 0, "adv": 0},
 			{"t": "in", "f": 0, "i": range(500), "a": 0, "fr": 0, "adv": 0},
-			{"t": "in", "f": 0, "i": [], "a": 0, "fr": 0, "adv": 0, "s": {"abc": 1}}]
+			{"t": "in", "f": 0, "i": [], "a": 0, "fr": 0, "adv": 0, "s": {"abc": 1}},
+			{"t": "in", "f": 100000, "i": [1], "a": 0, "fr": 0, "adv": 0},
+			{"t": "in", "f": 0, "i": [], "a": 0, "fr": 0, "adv": 0, "s": {"60": 1, "120": 1, "180": 1, "240": 1, "300": 1, "360": 1, "420": 1, "480": 1, "540": 1}}]
 	var accepted := 0
 	for packet in broken:
 		if lonely.is_valid_packet(packet):

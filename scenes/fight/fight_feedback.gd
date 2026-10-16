@@ -23,6 +23,8 @@ const VIBRATE_KO_MS := 160
 ## Effets notés gardés pendant 2 secondes.
 const PLAYED_MEMORY_FRAMES := 120
 
+## Nombre d'effets joués depuis le début (sert aux tests).
+var effects_played := 0
 var shake_frames := 0
 var shake_strength := 0.0
 var _rng := RandomNumberGenerator.new()
@@ -70,6 +72,7 @@ func _first_time(event: String) -> bool:
 	if _replaying and played.has(key):
 		return false
 	played[key] = true
+	effects_played += 1
 	return true
 
 
@@ -166,6 +169,8 @@ func round_ended(by_ko: bool) -> void:
 
 ## Tout s'arrête (nouvelle manche, remise en place de l'entraînement).
 func clear() -> void:
+	if not _first_time("clear"):
+		return
 	shake_frames = 0
 	hud.clear_popup()
 
