@@ -54,6 +54,9 @@ enum HitLevel { HIGH, MID, LOW }
 ## Coché : c'est une projection (saisie). Elle ne peut être ni parée ni contrée ;
 ## on l'évite en sautant, ou en projetant au même moment.
 @export var is_throw := false
+## Serment (ex : Dakon) : à la fin de la préparation, le combattant encaisse moins
+## pendant ce nombre de frames (0 = pas d'effet). Voir Fighter.OATH_DAMAGE_TAKEN.
+@export_range(0, 900) var guard_buff_frames := 0
 
 @export_group("Zone de frappe")
 ## Rectangle qui touche, en pixels, mesuré depuis les pieds du combattant

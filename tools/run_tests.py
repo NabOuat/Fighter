@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 GODOT = os.environ.get(
     "GODOT",
-    r"C:\Users\OUATTARA AFOR\Downloads\Godot_v4.7.2-stable_win64.exe\Godot_v4.7.2-stable_win64_console.exe",
+    r"C:\Users\OUATTARA AFOR\Documents\Godot_v4.7.2-stable_win64.exe\Godot_v4.7.2-stable_win64_console.exe",
 )
 # Messages internes de Godot à la fermeture, sans rapport avec les tests.
 NOISE = ("Unreferenced static string", "at: unref", "RID allocations", "PagedAllocator",

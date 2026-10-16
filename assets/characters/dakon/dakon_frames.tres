@@ -1,0 +1,260 @@
+[gd_resource type="SpriteFrames" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/air_attack/frame_01.png" id="1_sx2p7"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/air_attack/frame_02.png" id="2_tone0"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/air_attack/frame_03.png" id="3_kvqpk"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/air_attack/frame_04.png" id="4_xulke"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/combo_1/frame_01.png" id="5_cpq17"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/combo_1/frame_02.png" id="6_xdfiq"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/combo_1/frame_03.png" id="7_2l30r"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/combo_1/frame_04.png" id="8_qgumg"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/combo_2/frame_01.png" id="9_gqbvb"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/combo_2/frame_02.png" id="10_qen7c"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/combo_2/frame_03.png" id="11_tgte1"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/combo_2/frame_04.png" id="12_5oaru"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/combo_3/frame_01.png" id="13_0m6i1"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/combo_3/frame_02.png" id="14_y7g1s"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/combo_3/frame_03.png" id="15_4snm5"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/combo_3/frame_04.png" id="16_80t0n"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/guard/frame_01.png" id="17_1mmyq"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/guard/frame_02.png" id="18_y7t72"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/guard/frame_03.png" id="19_d4vfx"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/guard/frame_04.png" id="20_ltevx"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/hit/frame_01.png" id="21_yl5te"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/hit/frame_02.png" id="22_12cvw"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/hit/frame_03.png" id="23_cadcv"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/idle/frame_01.png" id="24_o5fri"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/idle/frame_02.png" id="25_vxrp5"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/idle/frame_03.png" id="26_0vioo"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/idle/frame_04.png" id="27_vffhc"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/ko/frame_01.png" id="28_6rbr5"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/ko/frame_02.png" id="29_7v3cy"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/ko/frame_03.png" id="30_oesy8"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/low_attack/frame_01.png" id="31_ll4ow"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/low_attack/frame_02.png" id="32_sfbha"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/low_attack/frame_03.png" id="33_ivrmo"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/low_attack/frame_04.png" id="34_tir8e"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/special_1/frame_01.png" id="35_buoep"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/special_1/frame_02.png" id="36_gp2xn"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/special_1/frame_03.png" id="37_6gq73"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/special_1/frame_04.png" id="38_jsgoe"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/special_1/frame_05.png" id="39_vnv0f"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/special_1/frame_06.png" id="40_2g6vq"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/special_1/frame_07.png" id="41_rv70a"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/special_1/frame_08.png" id="42_s5ooc"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/special_1/frame_09.png" id="43_nobhs"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/special_1/frame_10.png" id="44_pkb2v"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/special_1/frame_11.png" id="45_05pax"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/special_1/frame_12.png" id="46_6ke1g"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/walk_forward/frame_01.png" id="47_rqv1b"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/walk_forward/frame_02.png" id="48_rc2lb"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/walk_forward/frame_03.png" id="49_78yh4"]
+[ext_resource type="Texture2D" path="res://assets/characters/dakon/sprites/walk_forward/frame_04.png" id="50_lxu7k"]
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_sx2p7")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_tone0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_kvqpk")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_xulke")
+}],
+"loop": 0,
+"name": &"air_attack",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("5_cpq17")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_xdfiq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_2l30r")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_qgumg")
+}],
+"loop": 0,
+"name": &"combo_1",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("9_gqbvb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_qen7c")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_tgte1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_5oaru")
+}],
+"loop": 0,
+"name": &"combo_2",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("13_0m6i1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_y7g1s")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_4snm5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16_80t0n")
+}],
+"loop": 0,
+"name": &"combo_3",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("17_1mmyq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("18_y7t72")
+}, {
+"duration": 1.0,
+"texture": ExtResource("19_d4vfx")
+}, {
+"duration": 1.0,
+"texture": ExtResource("20_ltevx")
+}],
+"loop": 0,
+"name": &"guard",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("21_yl5te")
+}, {
+"duration": 1.0,
+"texture": ExtResource("22_12cvw")
+}, {
+"duration": 1.0,
+"texture": ExtResource("23_cadcv")
+}],
+"loop": 0,
+"name": &"hit",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("24_o5fri")
+}, {
+"duration": 1.0,
+"texture": ExtResource("25_vxrp5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("26_0vioo")
+}, {
+"duration": 1.0,
+"texture": ExtResource("27_vffhc")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("28_6rbr5")
+}, {
+"duration": 1.0,
+"texture": ExtResource("29_7v3cy")
+}, {
+"duration": 1.0,
+"texture": ExtResource("30_oesy8")
+}],
+"loop": 0,
+"name": &"ko",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("31_ll4ow")
+}, {
+"duration": 1.0,
+"texture": ExtResource("32_sfbha")
+}, {
+"duration": 1.0,
+"texture": ExtResource("33_ivrmo")
+}, {
+"duration": 1.0,
+"texture": ExtResource("34_tir8e")
+}],
+"loop": 0,
+"name": &"low_attack",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("35_buoep")
+}, {
+"duration": 1.0,
+"texture": ExtResource("36_gp2xn")
+}, {
+"duration": 1.0,
+"texture": ExtResource("37_6gq73")
+}, {
+"duration": 1.0,
+"texture": ExtResource("38_jsgoe")
+}, {
+"duration": 1.0,
+"texture": ExtResource("39_vnv0f")
+}, {
+"duration": 1.0,
+"texture": ExtResource("40_2g6vq")
+}, {
+"duration": 1.0,
+"texture": ExtResource("41_rv70a")
+}, {
+"duration": 1.0,
+"texture": ExtResource("42_s5ooc")
+}, {
+"duration": 1.0,
+"texture": ExtResource("43_nobhs")
+}, {
+"duration": 1.0,
+"texture": ExtResource("44_pkb2v")
+}, {
+"duration": 1.0,
+"texture": ExtResource("45_05pax")
+}, {
+"duration": 1.0,
+"texture": ExtResource("46_6ke1g")
+}],
+"loop": 0,
+"name": &"special_1",
+"speed": 10.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("47_rqv1b")
+}, {
+"duration": 1.0,
+"texture": ExtResource("48_rc2lb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("49_78yh4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("50_lxu7k")
+}],
+"loop": 1,
+"name": &"walk_forward",
+"speed": 10.0
+}]

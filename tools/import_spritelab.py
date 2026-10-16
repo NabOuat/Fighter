@@ -15,6 +15,15 @@ Ensuite, tools/build_sprite_frames.gd fabrique la ressource Godot (SpriteFrames)
 Le manifeste JSON dit quel zip correspond à quelle animation :
     {"hero": "abla_pokou", "source_dir": "C:/Users/.../Downloads",
      "reference": "idle", "animations": {"idle": "spritelab-custom-xxxx_frames.zip", ...}}
+
+Un zip « pack » (plusieurs animations dans des dossiers) se lit avec un « # » :
+    "idle": "spritelab_fighting_set.zip#unity/idle"
+Pour ne garder qu'une partie des images : "ko": "spritelab-custom_frames (8).zip[0:7]"
+
+Une animation pas encore générée peut être fabriquée à partir d'une image d'une autre
+(« derived »), en attendant la vraie :
+    "derived": {"idle": {"from": "guard", "frame": 0, "kind": "bob"}}
+kind : still (une image fixe), bob (respiration de 1 pixel), hit (recul), lying (à terre).
 """
 import io
 import json
@@ -34,10 +43,14 @@ CANVAS_H = 136
 BASELINE_Y = 128
 
 
-def load_frames(zip_path: Path) -> list:
-    with zipfile.ZipFile(zip_path) as z:
-        names = [n for n in z.namelist() if re.search(r"frame(\d+)\.png$", n)]
-        names.sort(key=lambda n: int(re.search(r"frame(\d+)\.png$", n).group(1)))
+def load_frames(source: Path, folder: str = "") -> list:
+    """Les images d'une animation, dans l'ordre. folder : dossier dans le zip (pour un pack)."""
+    with zipfile.ZipFile(source) as z:
+        if folder:
+            names = [n for n in z.namelist() if ("/" + folder.strip("/") + "/") in ("/" + n) and re.search(r"(\d+)\.png$", n)]
+        else:
+            names = [n for n in z.namelist() if re.search(r"frame(\d+)\.png$", n)]
+        names.sort(key=lambda n: int(re.search(r"(\d+)\.png$", n).group(1)))
         frames = []
         for name in names:
             image = Image.open(io.BytesIO(z.read(name))).convert("RGBA")
@@ -96,13 +109,46 @@ def main() -> None:
     out_root = ROOT / "assets" / "characters" / hero / "sprites"
     animations = manifest["animations"]
 
-    loaded = {name: load_frames(source / zip_name) for name, zip_name in animations.items()}
+    loaded = {}
+    for name, entry in animations.items():
+        # « fichier.zip[0:7] » : seulement les images 0 à 6 (ex : un K.O. sans le relevé).
+        entry, _, cut = entry.partition("[")
+        zip_name, _, folder = entry.partition("#")
+        loaded[name] = load_frames(source / zip_name, folder)
+        if cut:
+            start, _, end = cut.rstrip("]").partition(":")
+            loaded[name] = loaded[name][int(start or 0): int(end) if end else None]
+        if not loaded[name]:
+            raise SystemExit(f"Aucune image pour « {name} » dans {entry}")
+    # Animations fabriquées à partir d'une image d'une autre (en attendant la vraie).
+    derived = manifest.get("derived", {})
+    for name, spec in derived.items():
+        image = loaded[spec["from"]][spec.get("frame", 0)]
+        kind = spec.get("kind", "still")
+        if kind == "bob":
+            up = Image.new("RGBA", image.size)
+            up.paste(image, (0, -1), image)
+            frames = [image, image, up, up]
+        elif kind == "hit":
+            frames = []
+            for dx in (-3, -5, -3):
+                back = Image.new("RGBA", image.size)
+                back.paste(image, (dx, 0), image)
+                frames.append(back)
+        elif kind == "lying":
+            frames = [image.rotate(angle, resample=Image.NEAREST, expand=True) for angle in (25, 60, 90)]
+        else:
+            frames = [image]
+        loaded[name] = frames
     ref_name = manifest.get("reference", "idle")
     ref_mask = alpha(loaded[ref_name][0])
     ref_anchor = feet_center(ref_mask)
 
     report = {}
-    for name, frames in loaded.items():
+    # Les animations fabriquées passent en dernier : elles reprennent l'ancrage de leur source.
+    order = [n for n in loaded if n not in derived] + [n for n in loaded if n in derived]
+    for name in order:
+        frames = loaded[name]
         # Animation dessinée plus petite par SpriteLab : on cherche l'agrandissement
         # qui la superpose le mieux à la référence, puis on l'applique à toutes ses images.
         if name in manifest.get("rescale", []):
@@ -129,6 +175,13 @@ def main() -> None:
             # plus petit qu'un personnage), centré, sans recalage sur le personnage.
             frames = [f.resize((f.width // 2, f.height // 2), Image.NEAREST) for f in frames]
             anchor, score, ground = frames[0].width // 2, 1.0, frames[0].height // 2
+        elif name in derived and derived[name].get("kind", "still") == "lying":
+            # À terre : le corps est couché, centré sur son milieu.
+            box = frames[-1].getbbox()
+            anchor, score, ground = (box[0] + box[2]) // 2, 1.0, lowest_opaque(frames)
+        elif name in derived:
+            source_report = report[derived[name]["from"]]
+            anchor, score, ground = source_report["anchor"], 1.0, source_report["ground"]
         else:
             # Le personnage est au même endroit dans toutes les images d'une animation :
             # on cherche où il est en comparant la première ou la dernière image à la référence.

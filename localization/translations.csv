@@ -176,3 +176,9 @@ FIGHTER_POKOU_ORIGIN,Royaume baoulé,Baoule kingdom
 FIGHTER_POKOU_BIO,"Princesse ashanti, elle mena son peuple vers l'ouest au milieu du XVIIIe siècle, jusqu'au fleuve Comoé, et fonda le royaume baoulé.","Ashanti princess who led her people west in the mid-18th century, as far as the Comoé river, and founded the Baoule kingdom."
 TUTO_JUGGLE_TITLE,Le jonglage,Juggling
 TUTO_JUGGLE,"Le 3e coup du combo lance l'adversaire en l'air. Enchaîne : 3 fois {attack}, puis saute vers lui ({up}) et frappe 2 fois en l'air ({attack}, {attack}). 5 coups !","The 3rd combo hit launches the opponent into the air. Chain it: {attack} 3 times, then jump at him ({up}) and hit twice in the air ({attack}, {attack}). 5 hits!"
+FIGHTER_DAKON_NAME,Dakon,Dakon
+FIGHTER_DAKON_ORIGIN,Royaume ashanti,Ashanti kingdom
+FIGHTER_DAKON_BIO,"Prince ashanti, frère de Pokou selon la tradition. Écarté de la succession au milieu du XVIIIe siècle, il prit les armes pour son droit.","Ashanti prince, Pokou's brother according to tradition. Set aside from the succession in the mid-18th century, he took up arms for his claim."
+FIGHTER_ITSA_NAME,Itsa,Itsa
+FIGHTER_ITSA_ORIGIN,Royaume ashanti,Ashanti kingdom
+FIGHTER_ITSA_BIO,Vieux chef de guerre que certains conteurs nomment Itsa. La tradition en fait l'adversaire de Dakon dans la guerre de succession.,Old war chief whom some storytellers call Itsa. Tradition makes him Dakon's opponent in the succession war.

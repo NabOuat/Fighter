@@ -18,6 +18,21 @@ const NEW_FIGHTERS := {
 		"power": 3, "defense": 4, "speed": 2, "reach": FighterData.Reach.LONG_WEAPON,
 		"color": Color(0.85, 0.55, 0.2),
 	},
+	# Stats du dossier de recherche (docs/recherche/arc_pokou.md, section 6).
+	"dakon": {
+		"name_key": "FIGHTER_DAKON_NAME", "origin_key": "FIGHTER_DAKON_ORIGIN", "bio_key": "FIGHTER_DAKON_BIO",
+		"power": 4, "defense": 3, "speed": 3, "reach": FighterData.Reach.MELEE,
+		"color": Color(0.9, 0.9, 0.85),
+		# Spécial 1, Serment de l'épée : il plante l'akrafena et encaisse moins pendant 5 s.
+		"special_1": {"oath": 300},
+	},
+	"itsa": {
+		"name_key": "FIGHTER_ITSA_NAME", "origin_key": "FIGHTER_ITSA_ORIGIN", "bio_key": "FIGHTER_ITSA_BIO",
+		"power": 4, "defense": 4, "speed": 2, "reach": FighterData.Reach.LONG_WEAPON,
+		"color": Color(0.75, 0.6, 0.35),
+		# Spécial 1, Piège de la Pra : tir de mousquet, une balle rapide et petite.
+		"special_1": {"bullet": true},
+	},
 }
 
 
@@ -94,4 +109,22 @@ func _new_fighter(hero: String, info: Dictionary) -> FighterData:
 	model.speed = info.speed
 	model.reach = info.reach
 	model.placeholder_color = info.color
+	var special: Dictionary = info.get("special_1", {})
+	if special.has("oath"):
+		# Un serment ne frappe pas : pas de projectile, pas de zone de frappe.
+		var oath := model.special_1
+		oath.projectile = null
+		oath.startup = 20
+		oath.active = 1
+		oath.recovery = 18
+		oath.damage = 0
+		oath.hitbox = Rect2()
+		oath.guard_buff_frames = special.oath
+	if special.has("bullet"):
+		var shot := model.special_1.projectile
+		shot.speed = 420.0
+		shot.size = Vector2(8, 5)
+		shot.spawn_offset = Vector2(34, -32)
+		shot.color = Color(0.25, 0.22, 0.2)
+		shot.hit.damage = 70
 	return model

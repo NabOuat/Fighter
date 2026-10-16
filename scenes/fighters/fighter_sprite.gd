@@ -26,6 +26,18 @@ const FLASH_TINT := {
 ## Éclat du dessin pendant la préparation d'un coup (remplace le contour des rectangles).
 const STARTUP_GLOW := Color(1.35, 1.3, 1.1)
 
+## Remplaçants des animations manquantes (on suit la chaîne jusqu'à en trouver une).
+const FALLBACK := {
+	"walk_back": "walk_forward", "walk_forward": "idle",
+	"crouch": "guard_crouch", "guard_crouch": "crouch", "guard": "idle",
+	"jump": "idle", "air_attack": "combo_2", "low_attack": "combo_1",
+	"combo_2": "combo_1", "combo_3": "combo_2", "combo_1": "idle",
+	"special_1": "combo_3", "special_2": "combo_3", "throw": "combo_1",
+	"ultimate_pose": "special_1", "assist": "combo_3",
+	"hit": "idle", "knockdown": "ko", "ko": "hit",
+	"charge": "idle", "dodge": "hit", "victory": "idle", "intro": "walk_forward",
+}
+
 ## Pose imposée par l'arène (« intro », « victory ») et son avancement de 0 à 1.
 var cinematic := ""
 var cinematic_progress := 0.0
@@ -55,6 +67,10 @@ func refresh() -> void:
 	var attack := f.current_attack
 	if f.show_markers and attack and f.attack_frame <= attack.startup and attack.hitbox.has_area():
 		modulate = STARTUP_GLOW
+	# Serment en cours : le dessin luit d'or.
+	if f.oath_frames > 0:
+		var glow := 0.15 + 0.1 * sin(_ticks / 6.0)
+		modulate = Color(1.0 + glow, 1.0 + glow * 0.8, 1.0 - glow * 0.3)
 	if f.flash_frames > 0:
 		var kind := "hit"
 		if f.flash_color == Fighter.BLOCK_FLASH:
@@ -116,14 +132,23 @@ func _attack_animation(attack: AttackData) -> String:
 	if attack == data.throw:
 		return "throw"
 	if attack == data.ultimate:
-		return "ultimate_pose" if sprite_frames.has_animation(&"ultimate_pose") else "special_1"
+		return "ultimate_pose"
 	return "combo_1"
+
+
+## L'animation la plus proche quand une animation n'a pas encore été générée :
+## un héros est jouable avec seulement attente, marche, combo, coup reçu et K.O.
+func _available(anim: String) -> String:
+	var tried := {}
+	while not sprite_frames.has_animation(anim) and not tried.has(anim):
+		tried[anim] = true
+		anim = FALLBACK.get(anim, "idle")
+	return anim if sprite_frames.has_animation(anim) else String(sprite_frames.get_animation_names()[0])
 
 
 ## progress : de 0 à 1 dans l'animation ; -1 = boucle ; -2 = pose tenue.
 func _show(anim: String, progress: float) -> void:
-	if not sprite_frames.has_animation(anim):
-		anim = "idle"
+	anim = _available(anim)
 	if animation != anim:
 		animation = anim
 	var count := sprite_frames.get_frame_count(anim)

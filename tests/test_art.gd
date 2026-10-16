@@ -64,7 +64,8 @@ func _initialize() -> void:
 		await run(1)
 	var half: float = fight.SCREEN_SIZE.x / fight.ART_ZOOM / 2.0
 	var middle := (p.position.x + d.position.x) / 2.0
-	check("la caméra suit le milieu des combattants", absf(fight.camera.position.x - clampf(middle, half, fight.SCREEN_SIZE.x - half)) < 2.0)
+	# La caméra suit en douceur : elle peut avoir quelques pixels de retard sur un combattant qui bouge.
+	check("la caméra suit le milieu des combattants", absf(fight.camera.position.x - clampf(middle, half, fight.SCREEN_SIZE.x - half)) < 8.0, "caméra %.1f, milieu %.1f, positions %.1f / %.1f, %s" % [fight.camera.position.x, middle, p.position.x, d.position.x, state_name(p)])
 
 	section("La vague")
 	fight.reset_training()

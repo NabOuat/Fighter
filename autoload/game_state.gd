@@ -43,6 +43,8 @@ var roster: Array[FighterData] = [
 	preload("res://data/fighters/test_a.tres"),
 	preload("res://data/fighters/test_b.tres"),
 	preload("res://data/fighters/test_c.tres"),
+	preload("res://data/fighters/dakon.tres"),
+	preload("res://data/fighters/itsa.tres"),
 ]
 
 ## Choix faits dans les menus, utilisés par l'écran de combat.

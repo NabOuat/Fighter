@@ -1,0 +1,21 @@
+{
+ "hero": "dakon",
+ "source_dir": "C:/Users/OUATTARA AFOR/Downloads",
+ "reference": "guard",
+ "airborne": ["air_attack"],
+ "animations": {
+  "combo_1": "spritelab-custom_frames (1).zip",
+  "combo_2": "spritelab-custom_frames.zip",
+  "combo_3": "spritelab-custom_frames (2).zip",
+  "low_attack": "spritelab-custom_frames (3).zip",
+  "air_attack": "spritelab-custom_frames (4).zip",
+  "special_1": "spritelab-custom_frames (5).zip",
+  "guard": "spritelab-custom_frames (6).zip"
+ },
+ "derived": {
+  "idle": {"from": "guard", "frame": 0, "kind": "bob"},
+  "walk_forward": {"from": "guard", "frame": 0, "kind": "bob"},
+  "hit": {"from": "guard", "frame": 0, "kind": "hit"},
+  "ko": {"from": "guard", "frame": 0, "kind": "lying"}
+ }
+}

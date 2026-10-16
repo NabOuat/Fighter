@@ -31,7 +31,7 @@ The user is a beginner with Godot and works step by step: explain each change in
 ## Checking work
 - Automated tests: `python tools/run_tests.py` (or `python tools/run_tests.py combat`) runs every `tests/test_*.gd` headless; each prints OK/ÉCHEC lines and exits non-zero on failure. Run them after every gameplay change and add checks for new behaviour (extend `tests/test_base.gd`). `tests/tournament_ai.gd` is the long AI balance tournament.
 - Android export: preset "Android" in `export_presets.cfg` (excludes tests/, tools/, docs/, raw images). Java = Android Studio's jbr, SDK in %LOCALAPPDATA%/Android/Sdk; export templates must be installed from the editor.
-Godot is at `C:/Users/OUATTARA AFOR/Downloads/Godot_v4.7.2-stable_win64.exe/Godot_v4.7.2-stable_win64_console.exe`.
+Godot is at `C:/Users/OUATTARA AFOR/Documents/Godot_v4.7.2-stable_win64.exe/Godot_v4.7.2-stable_win64_console.exe`.
 - Import after adding files: `--headless --path . --import`
 - Run and catch script errors: `--headless --path . --quit-after 120`
 Close the Godot editor (or ask the user to) before editing `project.godot` directly.

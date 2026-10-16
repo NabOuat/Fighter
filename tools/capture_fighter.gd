@@ -1,7 +1,7 @@
 extends SceneTree
 ## Photographie un héros dessiné en plein combat (entraînement), pour vérifier
 ## ses animations dans le jeu : attente, marche, combo, coup bas, spécial, garde...
-##   Godot --path . --script res://tools/capture_fighter.gd -- <dossier> [index du roster]
+##   Godot --path . --script res://tools/capture_fighter.gd -- <dossier> [index du héros] [index de l'adversaire]
 
 var gs
 var fight
@@ -14,11 +14,12 @@ func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
 	out_dir = args[0] if args.size() > 0 else OS.get_user_data_dir()
 	var index := int(args[1]) if args.size() > 1 else 0
+	var foe := int(args[2]) if args.size() > 2 else 2
 	gs = root.get_node("GameState")
 	await process_frame
 	gs.dry_run = true
 	gs.reset_settings("user://capture_settings.cfg")
-	gs.start_training(gs.roster[index], gs.roster[2], gs.roster[2], FighterAI.Difficulty.NORMAL)
+	gs.start_training(gs.roster[index], gs.roster[2], gs.roster[foe], FighterAI.Difficulty.NORMAL)
 	fight = load("res://scenes/fight/fight.tscn").instantiate()
 	root.add_child(fight)
 	await process_frame

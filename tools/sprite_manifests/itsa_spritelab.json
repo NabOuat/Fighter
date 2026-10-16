@@ -1,0 +1,25 @@
+{
+ "hero": "itsa",
+ "source_dir": "C:/Users/OUATTARA AFOR/Downloads",
+ "reference": "idle",
+ "airborne": [
+  "jump"
+ ],
+ "animations": {
+  "idle": "spritelab_fighting_set.zip#unity/idle",
+  "walk_forward": "spritelab_fighting_set.zip#unity/walk",
+  "jump": "spritelab_fighting_set.zip#unity/jump",
+  "combo_1": "spritelab_fighting_set.zip#unity/light_attack",
+  "combo_3": "spritelab_fighting_set.zip#unity/heavy_attack",
+  "special_1": "spritelab_fighting_set.zip#unity/light_attack",
+  "guard": "spritelab_fighting_set.zip#unity/block",
+  "hit": "spritelab_fighting_set.zip#unity/hurt",
+  "victory": "spritelab_fighting_set.zip#unity/victory",
+  "knockdown": "spritelab-custom_frames (8).zip",
+  "ko": "spritelab-custom_frames (8).zip[0:7]"
+ },
+ "derived": {},
+ "rescale": [
+  "victory"
+ ]
+}

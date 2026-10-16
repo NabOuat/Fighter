@@ -1,0 +1,68 @@
+{
+ "idle": {
+  "frames": 6,
+  "anchor": 55,
+  "match": 1.0,
+  "ground": 126
+ },
+ "walk_forward": {
+  "frames": 6,
+  "anchor": 53,
+  "match": 0.77,
+  "ground": 121
+ },
+ "jump": {
+  "frames": 6,
+  "anchor": 50,
+  "match": 0.57,
+  "ground": 126
+ },
+ "combo_1": {
+  "frames": 6,
+  "anchor": 49,
+  "match": 0.76,
+  "ground": 121
+ },
+ "combo_3": {
+  "frames": 6,
+  "anchor": 56,
+  "match": 0.79,
+  "ground": 121
+ },
+ "special_1": {
+  "frames": 6,
+  "anchor": 49,
+  "match": 0.76,
+  "ground": 121
+ },
+ "guard": {
+  "frames": 4,
+  "anchor": 47,
+  "match": 0.74,
+  "ground": 121
+ },
+ "hit": {
+  "frames": 4,
+  "anchor": 45,
+  "match": 0.59,
+  "ground": 121
+ },
+ "victory": {
+  "frames": 6,
+  "anchor": 64,
+  "match": 0.65,
+  "ground": 146
+ },
+ "knockdown": {
+  "frames": 8,
+  "anchor": 75,
+  "match": 0.47,
+  "ground": 120
+ },
+ "ko": {
+  "frames": 7,
+  "anchor": 75,
+  "match": 0.47,
+  "ground": 120
+ }
+}

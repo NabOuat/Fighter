@@ -74,6 +74,8 @@ const AIR_ATTACKS_PER_JUMP := 2
 ## Dégâts des longs combos : -10 % par coup à partir du 3e, jamais moins de 40 %.
 const COMBO_SCALING_STEP := 0.1
 const MIN_COMBO_SCALING := 0.4
+## Pendant un serment, on ne reçoit que 60 % des dégâts.
+const OATH_DAMAGE_TAKEN := 0.6
 const KNOCKDOWN_FRAMES := 40
 const GETUP_FRAMES := 20
 const FLASH_FRAMES := 4
@@ -139,6 +141,8 @@ var buffered_ultimate := 0
 var buffered_assist := 0
 ## Boutons « en plus » (optionnels, pour le tactile) : projection et coup bas en un appui.
 var buffered_throw := 0
+## Serment en cours : frames restantes pendant lesquelles on encaisse moins.
+var oath_frames := 0
 var buffered_low := false
 ## Vrai : maintenir Spécial charge l'énergie (un appui court lance le spécial).
 ## Faux (le joueur a un bouton Charge) : Spécial part dès l'appui, sans attendre.
@@ -196,6 +200,7 @@ func reset() -> void:
 	buffered_low = false
 	special_held_frames = 0
 	parry_window = 0
+	oath_frames = 0
 	# Le soutien est disponible dès le début de chaque manche.
 	assist_cooldown = 0
 	modulate.a = 1.0
@@ -283,6 +288,7 @@ func tick(delta: float) -> void:
 	assist_cooldown = maxi(0, assist_cooldown - 1)
 	parry_window = maxi(0, parry_window - 1)
 	flash_frames = maxi(0, flash_frames - 1)
+	oath_frames = maxi(0, oath_frames - 1)
 	# Le soutien s'appelle sans interrompre ce qu'on fait (même en plein combo).
 	if buffered_assist > 0 and can_call_assist():
 		buffered_assist = 0
@@ -404,6 +410,9 @@ func _attack_state() -> void:
 		velocity.x = 0
 	if attack.projectile and attack_frame == attack.startup:
 		projectile_launched.emit(attack.projectile, self)
+	# Serment : le bonus de défense commence à la fin de la préparation.
+	if attack.guard_buff_frames > 0 and attack_frame == attack.startup:
+		oath_frames = attack.guard_buff_frames
 	var in_recovery := attack_frame > attack.startup + attack.active
 	# Annulation : un coup du combo qui a touché (ou été paré) peut être
 	# interrompu par un coup spécial. C'est la base des gros combos.
@@ -722,7 +731,8 @@ func _block(attack: AttackData, attacker: Fighter) -> void:
 func _take_damage(attack: AttackData, attacker: Fighter) -> void:
 	# Les longs combos font de moins en moins mal (combo_hits = coups déjà portés).
 	var scaling := clampf(1.0 - COMBO_SCALING_STEP * maxi(0, attacker.combo_hits - 1), MIN_COMBO_SCALING, 1.0)
-	var damage := roundi(attack.damage * attacker.data.damage_multiplier() * data.defense_multiplier() * scaling)
+	var oath := OATH_DAMAGE_TAKEN if oath_frames > 0 else 1.0
+	var damage := roundi(attack.damage * attacker.data.damage_multiplier() * data.defense_multiplier() * scaling * oath)
 	health = maxi(1 if immortal else 0, health - damage)
 	special_held_frames = 0
 	# Seul un appui sur Garde PENDANT qu'on encaisse déclenche l'esquive : un contre
