@@ -1,5 +1,5 @@
 class_name Fighter
-extends CharacterBody2D
+extends Node2D
 ## Un combattant : marcher, sauter, s'accroupir, frapper, parer, esquiver.
 ##
 ## Pour l'instant c'est un rectangle de couleur. Les vrais sprites
@@ -9,6 +9,11 @@ extends CharacterBody2D
 ## UN état (debout, saut, attaque, garde, touché...) et chaque état a ses règles.
 ## Il n'avance pas tout seul : l'arène (fight.gd) appelle tick() 60 fois
 ## par seconde, puis vérifie les coups. Tout se joue donc image par image.
+##
+## Pas de moteur physique : le sol est plat et les murs droits, les mouvements
+## sont calculés ici (_move). Ainsi tout l'état du combattant tient dans ses
+## variables, qu'on peut sauvegarder et recharger (get_state / set_state) :
+## c'est ce qui permet le « rollback » du jeu en ligne.
 
 ## Émis quand le combattant réussit une esquive mystique.
 signal dodged
@@ -38,6 +43,10 @@ const CHARGE_RATE := 1.5
 ## Maintenir Spécial plus de 10 frames = charger. Un appui plus court = coup spécial.
 const CHARGE_THRESHOLD_FRAMES := 10
 const GRAVITY := 900.0
+## Les murs de l'arène, pour le centre du corps (l'écran fait 480 de large,
+## le corps 20 : le centre ne passe jamais sous 10 ni au-dessus de 470).
+const WALL_LEFT := 10.0
+const WALL_RIGHT := 470.0
 const BODY_WIDTH := 24.0
 const STAND_HEIGHT := 56.0
 const CROUCH_HEIGHT := 36.0
@@ -99,6 +108,15 @@ const PARRY_FLASH := Color(0.3, 1.0, 1.0)
 
 ## L'adversaire, donné par l'arène.
 var opponent: Fighter
+## Hauteur du sol (donnée par l'arène).
+var floor_y := 230.0
+## Vitesse en unités par seconde (x : vers la droite, y : vers le bas).
+var velocity := Vector2.ZERO
+## Vrai quand les pieds touchent le sol (calculé par _move).
+var on_floor := false
+## Vrai quand l'état a changé depuis le dernier affichage : l'arène redessine
+## le combattant une seule fois par image affichée (et pas pendant l'arrêt sur image).
+var needs_redraw := true
 ## Le personnage choisi comme soutien pour ce combat, donné par l'arène.
 var support: FighterData
 ## Coché par l'arène en mode entraînement : la vie ne descend jamais sous 1.
@@ -205,7 +223,7 @@ func reset() -> void:
 	assist_cooldown = 0
 	modulate.a = 1.0
 	_change_state(State.IDLE)
-	_update_visuals()
+	refresh_view()
 
 
 ## Lit les commandes. Appelée à chaque frame, même pendant les arrêts sur image,
@@ -319,11 +337,29 @@ func tick(delta: float) -> void:
 			_charge_state()
 
 	velocity.y += GRAVITY * delta
-	var was_in_air := not is_on_floor()
-	move_and_slide()
-	if was_in_air and is_on_floor():
+	var was_in_air := not on_floor
+	_move(delta)
+	if was_in_air and on_floor:
 		_on_landed()
-	_update_visuals()
+	needs_redraw = true
+
+
+## Avance selon la vitesse, sans traverser le sol ni les murs (qui arrêtent
+## le mouvement dans leur direction).
+func _move(delta: float) -> void:
+	position += velocity * delta
+	if position.x < WALL_LEFT or position.x > WALL_RIGHT:
+		position.x = clampf(position.x, WALL_LEFT, WALL_RIGHT)
+		velocity.x = 0.0
+	on_floor = position.y >= floor_y
+	if on_floor:
+		position.y = floor_y
+		velocity.y = minf(velocity.y, 0.0)
+
+
+## Vrai quand les pieds touchent le sol.
+func is_on_floor() -> bool:
+	return on_floor
 
 
 # --- Les états ---------------------------------------------------------------
@@ -745,7 +781,10 @@ func _take_damage(attack: AttackData, attacker: Fighter) -> void:
 	if health > 0 and (state == State.JUGGLE or not is_on_floor()):
 		# Déjà en l'air : le coup relance (jonglage).
 		juggle_hits += 1
-		var pop := JUGGLE_POP * pow(JUGGLE_DECAY, juggle_hits - 1)
+		# Multiplications simples (pas de pow) : résultat identique sur tous les téléphones.
+		var pop := JUGGLE_POP
+		for i in juggle_hits - 1:
+			pop *= JUGGLE_DECAY
 		velocity = Vector2(direction * JUGGLE_PUSH, -maxf(pop, attack.launch))
 		_change_state(State.JUGGLE)
 	elif health > 0 and attack.launch > 0.0:
@@ -815,5 +854,6 @@ func attack_rect(attack: AttackData) -> Rect2:
 
 
 ## L'affichage suit l'état du combattant (voir fighter_view.gd).
-func _update_visuals() -> void:
+func refresh_view() -> void:
 	view.refresh()
+	needs_redraw = false

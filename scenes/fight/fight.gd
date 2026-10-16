@@ -103,6 +103,7 @@ func _ready() -> void:
 	match_log.setup(player, dummy)
 	hit_landed.connect(match_log.on_hit)
 	for fighter in fighters:
+		fighter.floor_y = FLOOR_Y
 		fighter.dodged.connect(feedback.dodged)
 		fighter.projectile_launched.connect(_on_projectile_launched)
 		fighter.ultimate_started.connect(_on_ultimate_started)
@@ -207,6 +208,11 @@ func _physics_process(delta: float) -> void:
 		if flow.phase == MatchFlow.Phase.MATCH_OVER and GameState.mode == GameState.Mode.QUICK \
 				and Input.is_action_just_pressed("attack"):
 			start_match()
+	# Les combattants sont redessinés une fois par image, seulement s'ils ont bougé
+	# (pendant l'arrêt sur image, leur dessin reste figé).
+	for fighter in fighters:
+		if fighter.needs_redraw:
+			fighter.refresh_view()
 	feedback.update()
 	_update_camera()
 	_update_hud()

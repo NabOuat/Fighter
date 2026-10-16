@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scenes/fight/fight.gd" id="1_fight"]
 [ext_resource type="PackedScene" path="res://scenes/fighters/fighter.tscn" id="2_fighter"]
@@ -16,15 +16,6 @@
 [ext_resource type="Script" path="res://scenes/fight/match_log.gd" id="16_log"]
 [ext_resource type="Script" path="res://scenes/fight/stage.gd" id="17_stage"]
 
-[sub_resource type="RectangleShape2D" id="Shape_floor"]
-size = Vector2(480, 40)
-
-[sub_resource type="WorldBoundaryShape2D" id="Shape_wall_left"]
-normal = Vector2(1, 0)
-
-[sub_resource type="WorldBoundaryShape2D" id="Shape_wall_right"]
-normal = Vector2(-1, 0)
-
 [node name="Fight" type="Node2D"]
 script = ExtResource("1_fight")
 
@@ -37,11 +28,8 @@ color = Color(0.16, 0.09, 0.22, 1)
 [node name="Stage" type="Node2D" parent="."]
 script = ExtResource("17_stage")
 
-[node name="Floor" type="StaticBody2D" parent="."]
+[node name="Floor" type="Node2D" parent="."]
 position = Vector2(240, 250)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Floor"]
-shape = SubResource("Shape_floor")
 
 [node name="View" type="ColorRect" parent="Floor"]
 offset_left = -240.0
@@ -50,17 +38,6 @@ offset_right = 240.0
 offset_bottom = 20.0
 mouse_filter = 2
 color = Color(0.36, 0.24, 0.18, 1)
-
-[node name="WallLeft" type="StaticBody2D" parent="."]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="WallLeft"]
-shape = SubResource("Shape_wall_left")
-
-[node name="WallRight" type="StaticBody2D" parent="."]
-position = Vector2(480, 0)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight"]
-shape = SubResource("Shape_wall_right")
 
 [node name="Dim" type="ColorRect" parent="."]
 visible = false
