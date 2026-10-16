@@ -28,6 +28,9 @@ signal hit_landed(result: Fighter.HitResult, attack: AttackData, attacker: Fight
 
 const TUTORIAL_SCENE := preload("res://scenes/fight/tutorial.tscn")
 
+## Durée d'une frame de combat : toujours 1/60 de seconde (le même calcul sur
+## tous les appareils, indispensable au jeu en ligne).
+const SIM_DELTA := 1.0 / 60.0
 ## Après un K.O., le combat passe au ralenti un moment.
 const KO_SLOWMO_FRAMES := 60
 ## Règles des combats du mode Histoire (écrites en texte dans StoryData).
@@ -182,10 +185,25 @@ func _setup_from_menus() -> void:
 	_update_camera(true)
 
 
-func _physics_process(delta: float) -> void:
-	frame_count += 1
+func _physics_process(_delta: float) -> void:
+	# L'IA de l'adversaire décide (le joueur, lui, est lu dans poll_input).
 	if training or flow.is_fighting():
 		tools.drive_dummy(projectiles)
+	step_frame()
+	if not training and flow.phase == MatchFlow.Phase.MATCH_OVER and GameState.mode == GameState.Mode.QUICK \
+			and Input.is_action_just_pressed("attack"):
+		start_match()
+	render()
+
+
+## Une frame de combat complète, d'après les commandes (« intent ») des deux
+## combattants. Elle ne dépend de rien d'autre que de l'état du combat : avec
+## les mêmes commandes, elle donne exactement le même résultat (jeu en ligne).
+## replaying : frame rejouée par le rollback (effets et sons déjà joués ignorés).
+func step_frame(replaying := false) -> void:
+	frame_count += 1
+	feedback.begin_frame(frame_count, replaying)
+	if training or flow.is_fighting():
 		for fighter in fighters:
 			fighter.poll_input()
 	else:
@@ -201,21 +219,76 @@ func _physics_process(delta: float) -> void:
 	elif slowmo_frames > 0 and frame_count % 2 == 0:
 		pass
 	else:
-		_simulate(delta)
+		_simulate(SIM_DELTA)
 
 	if not training:
 		flow.update()
-		if flow.phase == MatchFlow.Phase.MATCH_OVER and GameState.mode == GameState.Mode.QUICK \
-				and Input.is_action_just_pressed("attack"):
-			start_match()
-	# Les combattants sont redessinés une fois par image, seulement s'ils ont bougé
-	# (pendant l'arrêt sur image, leur dessin reste figé).
+
+
+## L'affichage d'une image : combattants, effets, caméra, interface.
+## Les combattants sont redessinés seulement s'ils ont bougé (pendant l'arrêt
+## sur image, leur dessin reste figé).
+func render() -> void:
 	for fighter in fighters:
 		if fighter.needs_redraw:
 			fighter.refresh_view()
 	feedback.update()
 	_update_camera()
 	_update_hud()
+
+
+# --- Sauvegarde de l'état (rollback du jeu en ligne) -------------------------
+
+## Une photo de tout l'état du combat (voir FightSnapshot).
+func save_state() -> Dictionary:
+	return FightSnapshot.capture(self)
+
+
+func load_state(snapshot: Dictionary) -> void:
+	FightSnapshot.restore(self, snapshot)
+
+
+func state_checksum(snapshot: Dictionary) -> int:
+	return FightSnapshot.checksum(snapshot)
+
+
+## Jeu en ligne : une frame jouée avec les commandes des deux joueurs (un nombre
+## chacun, voir NetInput), au lieu du clavier et de l'IA.
+func step_with_inputs(inputs: Array[int], replaying := false) -> void:
+	for i in fighters.size():
+		NetInput.decode(inputs[i], fighters[i].intent)
+	step_frame(replaying)
+
+
+## Remet les projectiles et soutiens d'une photo. Ceux déjà à l'écran sont
+## gardés s'ils correspondent (le dessin continue sans à-coup).
+func restore_effects(projectile_states: Array, assist_states: Array) -> void:
+	var same := projectiles.size() == projectile_states.size()
+	for i in projectiles.size():
+		if same and (projectiles[i].data != projectile_states[i].data
+				or projectiles[i].shooter != fighters[projectile_states[i].shooter]):
+			same = false
+	if not same:
+		for projectile in projectiles:
+			projectile.queue_free()
+		projectiles.clear()
+		for saved in projectile_states:
+			_create_projectile(saved.data, fighters[saved.shooter], saved.position, saved.direction, saved.from_assist)
+	for i in projectile_states.size():
+		projectiles[i].set_state(projectile_states[i])
+
+	same = assists.size() == assist_states.size()
+	for i in assists.size():
+		if same and (assists[i].data != assist_states[i].data or assists[i].caller != fighters[assist_states[i].caller]):
+			same = false
+	if not same:
+		for assist in assists:
+			assist.queue_free()
+		assists.clear()
+		for saved in assist_states:
+			_create_assist(saved.data, fighters[saved.caller])
+	for i in assist_states.size():
+		assists[i].set_state(assist_states[i])
 
 
 ## Une frame de combat. Les coups ne comptent que pendant la manche
@@ -530,13 +603,18 @@ func _end_finished_combos() -> void:
 
 func _on_assist_called(caller: Fighter) -> void:
 	feedback.assist_called()
+	_create_assist(caller.support.assist, caller)
+
+
+func _create_assist(assist_data: AssistData, caller: Fighter) -> Assist:
 	var assist := Assist.new()
-	assist.summon(caller.support.assist, caller, FLOOR_Y, ARENA_LEFT, ARENA_RIGHT)
+	assist.summon(assist_data, caller, FLOOR_Y, ARENA_LEFT, ARENA_RIGHT)
 	assist.projectile_requested.connect(_launch_projectile.bind(true))
 	add_child(assist)
 	# Le soutien est dessiné derrière les combattants.
 	move_child(assist, player.get_index())
 	assists.append(assist)
+	return assist
 
 
 func _remove_finished_assists() -> void:
@@ -561,12 +639,17 @@ func _on_projectile_launched(data: ProjectileData, shooter: Fighter) -> void:
 
 ## by_assist : lancé par un soutien (ne compte pas dans la limite d'un projectile à la fois).
 func _launch_projectile(data: ProjectileData, shooter: Fighter, origin: Vector2, direction: int, by_assist := false) -> void:
+	_create_projectile(data, shooter, origin, direction, by_assist)
+	if not by_assist:
+		shooter.active_projectiles += 1
+
+
+func _create_projectile(data: ProjectileData, shooter: Fighter, origin: Vector2, direction: int, by_assist: bool) -> Projectile:
 	var projectile := Projectile.new()
 	projectile.launch(data, shooter, origin, direction, by_assist)
 	add_child(projectile)
 	projectiles.append(projectile)
-	if not by_assist:
-		shooter.active_projectiles += 1
+	return projectile
 
 
 func _remove_projectile(projectile: Projectile) -> void:

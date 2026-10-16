@@ -91,6 +91,20 @@ const FLASH_FRAMES := 4
 const HIT_FLASH := Color.WHITE
 const BLOCK_FLASH := Color(0.6, 0.85, 1.0)
 const PARRY_FLASH := Color(0.3, 1.0, 1.0)
+## Les variables qui forment l'état du combattant à un instant donné : c'est ce
+## que le rollback sauvegarde et recharge (avec « intent », copié à part).
+## Toute nouvelle variable de jeu doit être ajoutée ici : un test le vérifie
+## (tests/test_rollback.gd), sinon le jeu en ligne se désynchroniserait.
+const STATE_VARS := [
+	"position", "velocity", "on_floor", "state", "facing", "health", "energy",
+	"current_attack", "attack_frame", "attack_serial", "combo_index", "chain_queued",
+	"attack_has_hit", "combo_hits", "stun_frames", "air_attack_used", "air_hits",
+	"juggle_hits", "guard_low", "buffered_attack", "buffered_guard", "buffered_special",
+	"buffered_ultimate", "buffered_assist", "buffered_throw", "buffered_low", "oath_frames",
+	"special_forward", "guard_forward", "special_held_frames", "active_projectiles",
+	"parry_window", "flash_frames", "flash_color", "_heal_buffer", "assist_cooldown",
+	"assist_active",
+]
 
 ## La fiche du combattant (stats, attaques...).
 @export var data: FighterData:
@@ -200,6 +214,25 @@ func _ready() -> void:
 		return
 	view.use_data(data)
 	reset()
+
+
+## L'état du combattant, pour le rollback (voir STATE_VARS).
+func get_state() -> Dictionary:
+	var saved := {}
+	for key in STATE_VARS:
+		saved[key] = get(key)
+	saved["intent"] = intent.duplicate()
+	return saved
+
+
+## Recharge un état sauvegardé par get_state().
+func set_state(saved: Dictionary) -> void:
+	for key in STATE_VARS:
+		set(key, saved[key])
+	# On recopie les valeurs dans le même dictionnaire (d'autres scripts le lisent).
+	for key in saved.intent:
+		intent[key] = saved.intent[key]
+	needs_redraw = true
 
 
 ## Remet le combattant en début de manche (l'arène règle l'énergie).

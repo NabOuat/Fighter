@@ -2,6 +2,9 @@ class_name Projectile
 extends Node2D
 ## Un projectile en vol. L'arène le crée, le fait avancer et vérifie s'il touche.
 
+## Ce que le rollback sauvegarde (le tireur est sauvegardé à part, par l'arène).
+const STATE_VARS := ["data", "position", "direction", "age", "from_assist"]
+
 var data: ProjectileData
 var shooter: Fighter
 var direction := 1
@@ -36,6 +39,19 @@ func launch(projectile_data: ProjectileData, from: Fighter, origin: Vector2, dir
 	view.position = -data.size / 2.0
 	view.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(view)
+
+
+func get_state() -> Dictionary:
+	var saved := {}
+	for key in STATE_VARS:
+		saved[key] = get(key)
+	return saved
+
+
+## Un projectile recréé par le rollback reprend exactement là où il en était.
+func set_state(saved: Dictionary) -> void:
+	for key in STATE_VARS:
+		set(key, saved[key])
 
 
 ## Une frame de vol.

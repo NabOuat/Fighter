@@ -16,6 +16,10 @@ const BODY_SIZE := Vector2(20, 50)
 ## Le bouclier commence juste devant le corps de celui qui appelle.
 const BARRIER_GAP := 13.0
 
+## Ce que le rollback sauvegarde (celui qui appelle est sauvegardé à part, par l'arène).
+const STATE_VARS := ["data", "supporter", "position", "facing", "frame", "hit_done",
+		"barrier_flash", "floor_level", "_heal_left"]
+
 var data: AssistData
 ## Celui qui a appelé le soutien (c'est à lui que reviennent les coups et le soin).
 var caller: Fighter
@@ -54,6 +58,20 @@ func summon(assist_data: AssistData, who: Fighter, floor_y: float, left: float, 
 	_effect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_effect.visible = false
 	add_child(_effect)
+	_update_visuals()
+
+
+func get_state() -> Dictionary:
+	var saved := {}
+	for key in STATE_VARS:
+		saved[key] = get(key)
+	return saved
+
+
+## Un soutien recréé par le rollback reprend exactement là où il en était.
+func set_state(saved: Dictionary) -> void:
+	for key in STATE_VARS:
+		set(key, saved[key])
 	_update_visuals()
 
 

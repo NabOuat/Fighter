@@ -39,6 +39,11 @@ const ROUND_OVER_FRAMES := 210
 ## Entre deux phases de boss ou deux vagues : une pause plus courte.
 const NEXT_WAVE_FRAMES := 120
 
+## Ce que le rollback sauvegarde (les gagnants de la manche sont sauvegardés à part).
+const STATE_VARS := ["rule", "player_rounds_needed", "dummy_rounds_needed", "round_frames",
+		"phase", "phase_frames", "round_number", "player_wins", "dummy_wins", "timer_frames",
+		"round_result_key"]
+
 var rule: Rule = Rule.VERSUS
 ## Manches que le joueur doit gagner (phases du boss, vagues) et que l'adversaire doit gagner.
 var player_rounds_needed := ROUNDS_TO_WIN
@@ -65,6 +70,23 @@ var _dummy: Fighter
 func setup(player: Fighter, dummy: Fighter) -> void:
 	_player = player
 	_dummy = dummy
+
+
+## L'état du déroulement, pour le rollback (gagnants : 0 = joueur, 1 = adversaire).
+func get_state() -> Dictionary:
+	var saved := {}
+	for key in STATE_VARS:
+		saved[key] = get(key)
+	saved["round_winners"] = round_winners.map(func(f: Fighter) -> int: return 0 if f == _player else 1)
+	return saved
+
+
+func set_state(saved: Dictionary) -> void:
+	for key in STATE_VARS:
+		set(key, saved[key])
+	round_winners.clear()
+	for index in saved.round_winners:
+		round_winners.append(_player if index == 0 else _dummy)
 
 
 ## Choisit les règles (count : phases du boss ou vagues ; seconds : chrono).
