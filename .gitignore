@@ -8,3 +8,6 @@ assets/characters/*/raw/
 # Fichiers exportés (APK)
 /build/
 __pycache__/
+
+# Dossiers de travail des outils de génération d'images (copies des décors)
+/output/
