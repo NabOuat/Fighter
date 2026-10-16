@@ -182,3 +182,11 @@ FIGHTER_DAKON_BIO,"Prince ashanti, frère de Pokou selon la tradition. Écarté 
 FIGHTER_ITSA_NAME,Itsa,Itsa
 FIGHTER_ITSA_ORIGIN,Royaume ashanti,Ashanti kingdom
 FIGHTER_ITSA_BIO,Vieux chef de guerre que certains conteurs nomment Itsa. La tradition en fait l'adversaire de Dakon dans la guerre de succession.,Old war chief whom some storytellers call Itsa. Tradition makes him Dakon's opponent in the succession war.
+SELECT_STAGE,Décor : %s,Stage: %s
+STAGE_RANDOM,au hasard,random
+STAGE_VILLAGE_AUBE,village à l'aube,village at dawn
+STAGE_KUMASI_JOUR,"Kumasi, le jour",Kumasi by day
+STAGE_KUMASI_NUIT,cour royale de Kumasi,Kumasi royal courtyard
+STAGE_SAVANE_ITSA,savane d'Itsa,Itsa's savanna
+STAGE_COMOE_CRUE,la Comoé en crue,the Comoé in flood
+STAGE_FORET_DEPART,forêt du départ,forest of departure

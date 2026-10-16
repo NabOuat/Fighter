@@ -57,7 +57,8 @@ func _ready() -> void:
 	end_panel.visible = false
 	skip_button.pressed.connect(next_lesson)
 	training_button.pressed.connect(func():
-		GameState.start_training(GameState.roster[0], GameState.roster[1], GameState.roster[1], GameState.difficulty)
+		var heroes := GameState.playable_roster()
+		GameState.start_training(heroes[0], heroes[1], heroes[1], GameState.difficulty)
 		GameState.go_to(GameState.FIGHT))
 	menu_button.pressed.connect(GameState.go_to.bind(GameState.MAIN_MENU))
 

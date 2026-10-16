@@ -1,7 +1,8 @@
 extends MenuScreen
 ## L'écran de sélection, avant un combat d'Arcade ou d'Entraînement :
 ## choisir son combattant, son soutien, la difficulté (et l'adversaire en
-## entraînement). Les cartes sont créées à partir du roster de GameState.
+## entraînement, avec le décor). Les cartes sont créées à partir des personnages
+## jouables de GameState (les combattants de test ne sont pas proposés).
 
 const CARD_SIZE := Vector2(54, 54)
 const SMALL_CARD_SIZE := Vector2(36, 26)
@@ -19,6 +20,10 @@ var difficulty: FighterAI.Difficulty = GameState.difficulty
 var _fighter_cards := {}
 var _support_cards := {}
 var _opponent_cards := {}
+## Décors proposés en entraînement : « au hasard » puis chaque décor présent.
+var _stage_choices: Array = []
+var _stage_index := 0
+var stage_button: Button
 
 @onready var title_label: Label = %TitleLabel
 @onready var fighter_cards: HBoxContainer = %FighterCards
@@ -43,7 +48,7 @@ func _ready() -> void:
 	var fighter_group := ButtonGroup.new()
 	var support_group := ButtonGroup.new()
 	var opponent_group := ButtonGroup.new()
-	for data in GameState.roster:
+	for data in GameState.playable_roster():
 		_fighter_cards[data] = _add_card(fighter_cards, data, CARD_SIZE, fighter_group, select_fighter)
 		_support_cards[data] = _add_card(support_cards, data, SMALL_CARD_SIZE, support_group, select_support)
 		_opponent_cards[data] = _add_card(opponent_cards, data, SMALL_CARD_SIZE, opponent_group, select_opponent)
@@ -54,13 +59,16 @@ func _ready() -> void:
 		difficulty_buttons[i].pressed.connect(select_difficulty.bind(i))
 	back_button.pressed.connect(go_back)
 	fight_button.pressed.connect(start)
+	if training:
+		_add_stage_button()
 
 	# Choix de départ : le dernier combattant joué, sinon le premier.
-	var first: FighterData = GameState.player_fighter if GameState.player_fighter in GameState.roster else GameState.roster[0]
+	var heroes := GameState.playable_roster()
+	var first: FighterData = GameState.player_fighter if GameState.player_fighter in heroes else heroes[0]
 	select_fighter(first)
-	if GameState.player_support in GameState.roster and GameState.player_support != first:
+	if GameState.player_support in heroes and GameState.player_support != first:
 		select_support(GameState.player_support)
-	select_opponent(GameState.roster[(GameState.roster.find(first) + 1) % GameState.roster.size()])
+	select_opponent(heroes[(heroes.find(first) + 1) % heroes.size()])
 	select_difficulty(difficulty)
 	focus_first(fight_button)
 
@@ -73,9 +81,14 @@ func _add_card(row: HBoxContainer, data: FighterData, card_size: Vector2, group:
 	card.pressed.connect(on_pressed.bind(data))
 	# Le portrait : l'image si elle existe, sinon la couleur du combattant.
 	var portrait: Control
-	if data.portrait:
+	var picture: Texture2D = data.portrait
+	# Pas de portrait : la première image d'attente du personnage dessiné.
+	if picture == null and data.sprite_frames and data.sprite_frames.has_animation(&"idle"):
+		picture = data.sprite_frames.get_frame_texture(&"idle", 0)
+	if picture:
 		portrait = TextureRect.new()
-		portrait.texture = data.portrait
+		portrait.texture = picture
+		portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	else:
@@ -116,7 +129,7 @@ func select_fighter(data: FighterData) -> void:
 	for other in _support_cards:
 		_support_cards[other].disabled = other == data
 	if support == null or support == data:
-		for other in GameState.roster:
+		for other in GameState.playable_roster():
 			if other != data:
 				select_support(other)
 				break
@@ -144,10 +157,41 @@ func select_difficulty(level: int) -> void:
 ## Lance le combat avec les choix faits.
 func start() -> void:
 	if GameState.mode == GameState.Mode.TRAINING:
+		GameState.training_stage = selected_stage()
 		GameState.start_training(fighter, support, opponent, difficulty)
 	else:
 		GameState.start_arcade(fighter, support, difficulty)
 	GameState.go_to(GameState.FIGHT)
+
+
+## Bouton « Décor » (entraînement) : une vignette du décor ; chaque appui passe au suivant.
+func _add_stage_button() -> void:
+	_stage_choices = [GameState.RANDOM_STAGE] + GameState.available_stages()
+	_stage_index = maxi(0, _stage_choices.find(GameState.training_stage))
+	stage_button = Button.new()
+	stage_button.custom_minimum_size = Vector2(150, 40)
+	stage_button.add_theme_font_size_override("font_size", 8)
+	stage_button.expand_icon = true
+	stage_button.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	stage_button.pressed.connect(next_stage)
+	$Info/Box.add_child(stage_button)
+	_refresh_stage()
+
+
+func next_stage() -> void:
+	_stage_index = (_stage_index + 1) % _stage_choices.size()
+	_refresh_stage()
+
+
+func selected_stage() -> String:
+	return _stage_choices[_stage_index] if not _stage_choices.is_empty() else ""
+
+
+func _refresh_stage() -> void:
+	var id: String = selected_stage()
+	var name_key := "STAGE_RANDOM" if id == GameState.RANDOM_STAGE else "STAGE_" + id.to_upper()
+	stage_button.text = tr("SELECT_STAGE") % tr(name_key)
+	stage_button.icon = load(Stage.texture_path(id, "back")) if Stage.exists(id) else null
 
 
 func go_back() -> void:

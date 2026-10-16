@@ -18,7 +18,8 @@ func _initialize() -> void:
 	gs.dry_run = true
 	gs.settings_path = TEST_SETTINGS
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(TEST_SETTINGS))
-	var roster: Array[FighterData] = gs.roster
+	# Les menus ne proposent que les personnages jouables (pas les combattants de test).
+	var roster: Array[FighterData] = gs.playable_roster()
 
 	section("Réglages enregistrés")
 	gs.set_sfx_volume(0.5)
@@ -139,7 +140,9 @@ func _initialize() -> void:
 	var all_present := true
 	for fighter_data in roster:
 		all_present = all_present and gs.arcade_opponents.any(func(e): return e.fighter == fighter_data)
-	check("l'Arcade fait affronter tout le roster", all_present)
+	check("l'Arcade fait affronter tous les personnages jouables", all_present)
+	var no_test: bool = gs.arcade_opponents.all(func(e): return e.fighter.id not in gs.TEST_FIGHTERS)
+	check("pas de combattant de test en Arcade", no_test)
 	select.queue_free()
 
 	gs.mode = gs.Mode.TRAINING
@@ -147,7 +150,11 @@ func _initialize() -> void:
 	root.add_child(select)
 	await process_frame
 	select.select_opponent(roster[2])
+	check("en Entraînement, on choisit le décor", select.stage_button != null and select.stage_button.visible)
+	select.next_stage()
+	var chosen: String = select.selected_stage()
 	select.start()
+	check("le décor choisi est gardé", gs.training_stage == chosen and chosen != "")
 	check("en Entraînement, on choisit l'adversaire", select.opponent_cards.visible and gs.opponent_fighter == roster[2] and gs.mode == gs.Mode.TRAINING)
 	select.queue_free()
 

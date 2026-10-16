@@ -98,6 +98,13 @@ func go_to(scene_path: String) -> void:
 	get_tree().change_scene_to_file.call_deferred(scene_path)
 
 
+## Les combattants de test (rectangles) : gardés pour les tests, cachés dans les menus.
+const TEST_FIGHTERS := [&"test_a", &"test_b", &"test_c"]
+## Les décors du jeu, dans l'ordre de l'écran de sélection.
+const STAGES := ["village_aube", "kumasi_jour", "kumasi_nuit", "savane_itsa", "comoe_crue"]
+## Choix « décor au hasard » de l'entraînement.
+const RANDOM_STAGE := "random"
+
 ## Décor de chaque personnage quand on l'affronte en Arcade (son « terrain »).
 const HOME_STAGES := {
 	&"abla_pokou": "comoe_crue", &"dakon": "kumasi_nuit", &"itsa": "savane_itsa",
@@ -107,6 +114,18 @@ const TRAINING_STAGE := "village_aube"
 
 ## Décor imposé (chapitre du mode Histoire, outils de capture). Vide = choix automatique.
 var forced_stage := ""
+## Décor choisi pour l'entraînement ("" = village, RANDOM_STAGE = au hasard).
+var training_stage := ""
+
+
+## Les personnages proposés dans les menus (sans les combattants de test).
+func playable_roster() -> Array[FighterData]:
+	return roster.filter(func(f): return f.id not in TEST_FIGHTERS)
+
+
+## Les décors réellement présents dans le jeu.
+func available_stages() -> Array:
+	return STAGES.filter(Stage.exists)
 
 
 ## Le décor du prochain combat ("" = fond uni du prototype, pour l'arène lancée seule).
@@ -114,14 +133,19 @@ func stage_for_fight(opponent: FighterData) -> String:
 	if forced_stage != "":
 		return forced_stage
 	match mode:
-		Mode.TRAINING, Mode.TUTORIAL:
+		Mode.TRAINING:
+			if training_stage == RANDOM_STAGE and not available_stages().is_empty():
+				var all := available_stages()
+				return all[randi() % all.size()]
+			return training_stage if Stage.exists(training_stage) else TRAINING_STAGE
+		Mode.TUTORIAL:
 			return TRAINING_STAGE
 		Mode.ARCADE:
 			var home: String = HOME_STAGES.get(opponent.id, "")
 			if home != "" and Stage.exists(home):
 				return home
 			# Les autres : un décor existant, différent à chaque combat de la série.
-			var all := ["kumasi_jour", "kumasi_nuit", "savane_itsa", "comoe_crue", "village_aube"].filter(Stage.exists)
+			var all := available_stages()
 			return all[arcade_index % all.size()] if not all.is_empty() else ""
 	return ""
 
@@ -141,7 +165,7 @@ func start_arcade(fighter: FighterData, support: FighterData, level: FighterAI.D
 	var pool: Array[FighterData] = []
 	while arcade_opponents.size() < ARCADE_LENGTH:
 		if pool.is_empty():
-			pool = roster.duplicate()
+			pool = playable_roster()
 			_shuffle(pool, rng)
 		var opponent: FighterData = pool.pop_back()
 		arcade_opponents.append({"fighter": opponent, "support": _pick_support(opponent, rng)})
@@ -164,7 +188,7 @@ func start_training(fighter: FighterData, support: FighterData, opponent: Fighte
 
 ## Un soutien différent du combattant lui-même.
 func _pick_support(fighter: FighterData, rng: RandomNumberGenerator) -> FighterData:
-	var others := roster.filter(func(f): return f != fighter)
+	var others := playable_roster().filter(func(f): return f != fighter)
 	if others.is_empty():
 		return fighter
 	return others[rng.randi_range(0, others.size() - 1)]

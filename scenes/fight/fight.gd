@@ -138,8 +138,8 @@ func _setup_from_menus() -> void:
 			dummy.data = entry.fighter
 			dummy.support = entry.support
 		GameState.Mode.TUTORIAL:
-			player.data = GameState.roster[0]
-			dummy.data = GameState.roster[1]
+			player.data = GameState.playable_roster()[0]
+			dummy.data = GameState.playable_roster()[1]
 		GameState.Mode.TRAINING:
 			player.data = GameState.player_fighter
 			player.support = GameState.player_support
